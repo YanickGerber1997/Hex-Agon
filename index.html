@@ -1,0 +1,3049 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hex-Agon</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --shadow: 0 10px 28px rgba(15,23,42,0.06);
+
+      --hexStroke: rgba(255,255,255,0.82);
+      --hexStrokeHover: rgba(255,255,255,0.95);
+      --hexFill: rgba(255,255,255,0.10);
+      --hexFillHover: rgba(255,255,255,0.18);
+      --focus: rgba(37,99,235,0.70);
+
+      --red:#dc2626;
+      --blue:#2563eb;
+
+      --landFill: rgba(255,255,255,0.06);
+      --landStroke: rgba(255,255,255,0.82);
+
+      --waterFill: rgba(37,99,235,0.18);
+      --waterStroke: rgba(37,99,235,0.38);
+
+      --forestFill: rgba(34,197,94,0.16);
+      --forestStroke: rgba(34,197,94,0.32);
+
+      /* Fog */
+      --fogFill: rgba(255,255,255,0.62);
+      --fogStroke: rgba(203,213,225,0.40);
+
+      /* Overlays (hell/weiß) */
+      --visionFill: rgba(255,255,255,0.18);
+      --visionStroke: rgba(255,255,255,0.42);
+
+      --rangeFill: rgba(255,255,255,0.22);
+      --rangeStroke: rgba(255,255,255,0.55);
+
+      --shootFill: rgba(220,38,38,0.08);
+--shootStroke: rgba(220,38,38,0.22);
+
+
+    }
+
+    .tile--fog .hex{
+      filter: saturate(0.9) contrast(0.98);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .page{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 12px;
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+      min-height: 100%;
+    }
+
+    header.top{
+      display:flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eef2f7;
+    }
+
+    .leftHead{
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .muted{ color: var(--muted); }
+
+    .hud{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      white-space: nowrap;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 6px;
+      border: 1px solid #e5e7eb;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background:#fff;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.04);
+      font-size: 13px;
+    }
+
+    button{
+      appearance: none;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(15,23,42,0.06);
+    }
+    button:active{ transform: translateY(1px); }
+    button:disabled{
+      cursor:not-allowed;
+      opacity: 0.5;
+      transform:none;
+    }
+
+    .hint{
+      font-size: 13px;
+      color: var(--muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 88ch;
+    }
+
+    /* === Unit overview (collapsible) === */
+    .unitOverview{
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      background:#fff;
+      overflow:hidden;
+    }
+
+    .unitOverviewTop{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #eef2f7;
+    }
+
+    .unitOverviewTitle{
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .unitOverviewTitle strong{ font-size: 14px; }
+    .unitOverviewTitle span{ font-size: 12px; color: var(--muted); }
+
+    .unitOverviewBody{
+      display:none;
+      padding: 12px;
+    }
+    .unitOverview.isOpen .unitOverviewBody{ display:block; }
+
+    .unitCols{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 760px){
+      .unitCols{ grid-template-columns: 1fr; }
+    }
+
+    .unitCol{
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      padding: 10px;
+      background:#fff;
+    }
+
+    .unitColHead{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .tagP1{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      font-weight: 900;
+    }
+    .dotP1{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: rgba(220,38,38,0.92);
+    }
+
+    .tagP2{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      font-weight: 900;
+    }
+    .dotP2{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: rgba(37,99,235,0.92);
+    }
+
+    .unitList{
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .unitCard{
+      display:flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      padding: 10px 12px;
+      background:#fff;
+    }
+
+    .unitLeft{
+      display:flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .unitType{
+      font-weight: 1000;
+      font-size: 14px;
+      letter-spacing: 0.2px;
+    }
+
+    .unitMeta{
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      max-width: 42ch;
+    }
+
+    .unitHp{
+      display:flex;
+      flex-direction: column;
+      align-items:flex-end;
+      gap: 2px;
+      flex: none;
+    }
+
+    .hpLabel{
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 900;
+      letter-spacing: 0.2px;
+    }
+
+    .hpVal{
+      font-size: 22px;
+      font-weight: 1000;
+      line-height: 1;
+      color: rgba(15,23,42,0.92);
+      min-width: 54px;
+      text-align:right;
+    }
+
+    /* === Board === */
+    .board{
+      position: relative;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      flex: 1;
+      min-height: 74vh;
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      background:#fff;
+    }
+
+    svg.hexsvg{
+      width: 100%;
+      display:block;
+      height: auto;
+    }
+
+    .mapImage{ opacity: 0.80; }
+
+    .hex{
+      fill: var(--hexFill);
+      stroke: var(--hexStroke);
+      stroke-width: 1.35;
+      vector-effect: non-scaling-stroke;
+      transition: fill .12s ease, stroke .12s ease, opacity .12s ease;
+    }
+    .tile:hover .hex{
+      fill: var(--hexFillHover);
+      stroke: var(--hexStrokeHover);
+    }
+    .tile:focus-visible .hex{
+      stroke: var(--focus);
+      stroke-width: 2.2;
+    }
+
+    .tile--land .hex{ fill: var(--landFill); stroke: var(--landStroke); }
+    .tile--water .hex{ fill: var(--waterFill); stroke: var(--waterStroke); }
+    .tile--forest .hex{ fill: var(--forestFill); stroke: var(--forestStroke); }
+
+    .tile--fog .hex{
+      fill: var(--fogFill) !important;
+      stroke: var(--fogStroke) !important;
+    }
+
+    /* Overlay polygons */
+    .visionPoly{
+      fill: var(--visionFill);
+      stroke: var(--visionStroke);
+      stroke-width: 1.2;
+      vector-effect: non-scaling-stroke;
+      pointer-events:none;
+    }
+    .rangePoly{
+      fill: var(--rangeFill);
+      stroke: var(--rangeStroke);
+      stroke-width: 1.4;
+      vector-effect: non-scaling-stroke;
+      pointer-events:none;
+    }
+
+    /* Ability target overlay (leicht anders) */
+    .targetPoly{
+      fill: rgba(245,158,11,0.16);
+      stroke: rgba(245,158,11,0.40);
+      stroke-width: 1.6;
+      vector-effect: non-scaling-stroke;
+      pointer-events:none;
+    }
+
+    /* Units on map */
+    .unitDot{
+      stroke: rgba(255,255,255,0.95);
+      stroke-width: 2;
+    }
+    .unit--p1{ fill: rgba(220,38,38,0.92); }
+    .unit--p2{ fill: rgba(37,99,235,0.92); }
+
+    .unitLabel{
+      font-size: 12px;
+      font-weight: 800;
+      fill: rgba(255,255,255,0.95);
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .selectedRing{
+      fill: none;
+      stroke: rgba(255,255,255,0.95);
+      stroke-width: 3;
+      opacity: 0.9;
+      pointer-events:none;
+    }
+
+    .unitG.isDimmed{
+      opacity: 0.35;
+      filter: grayscale(0.3);
+    }
+
+    /* White privacy screen */
+    .privacy{
+      position: fixed;
+  inset: 0;
+  z-index: 210;
+      background:#fff;
+      z-index: 50;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
+      text-align:center;
+      pointer-events:auto;
+    }
+    .privacy.isVisible{ display:flex; }
+
+    .privacyCard{
+      max-width: 520px;
+      width: 100%;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      background:#fff;
+    }
+    .privacyTitle{
+      font-size: 18px;
+      font-weight: 900;
+      margin: 0 0 6px 0;
+    }
+    .privacyText{
+      margin: 0 0 14px 0;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    /* Board lock: only svg disabled */
+    .board.isLocked{ user-select:none; }
+    .board.isLocked svg{ pointer-events:none; }
+
+    /* Modal (Confirm) */
+    .modal{
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding: 18px;
+  background: rgba(15,23,42,0.28);
+  backdrop-filter: blur(4px);
+}
+
+    .modal.isVisible{ display:flex; }
+    .modalCard{
+      width: min(560px, 100%);
+      background:#fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      box-shadow: 0 18px 48px rgba(15,23,42,0.22);
+      overflow:hidden;
+    }
+    .modalTop{
+      padding: 14px 16px;
+      border-bottom: 1px solid #eef2f7;
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .modalTitle{
+      margin:0;
+      font-size: 16px;
+      font-weight: 900;
+    }
+    .modalText{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.35;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    .modalActions{
+      display:flex;
+      justify-content:flex-end;
+      gap: 10px;
+      padding: 14px 16px;
+      border-top: 1px solid #eef2f7;
+      background: #fff;
+    }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 230;
+      display:none;
+      max-width: min(560px, calc(100% - 32px));
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(226,232,240,0.9);
+      background: rgba(255,255,255,0.96);
+      box-shadow: 0 18px 48px rgba(15,23,42,0.22);
+      color: rgba(15,23,42,0.92);
+      font-size: 14px;
+      font-weight: 800;
+      text-align:center;
+      line-height: 1.35;
+      backdrop-filter: blur(6px);
+      pointer-events:none;
+    }
+    .toast.isVisible{ display:block; }
+    .toast--ok{ border-color: rgba(34,197,94,0.35); }
+    .toast--warn{ border-color: rgba(245,158,11,0.40); }
+    .toast--bad{ border-color: rgba(220,38,38,0.35); }
+
+    /* === Start Screen === */
+    .startScreen{
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display:none;
+
+  /* WICHTIG: nicht nur center, sonst wird bei hoher Card abgeschnitten */
+  align-items: flex-start;
+  justify-content: center;
+
+  padding: 18px;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(6px);
+  pointer-events:auto;
+
+  /* NEU: Overlay darf scrollen */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.startScreen.isVisible{ display:flex; }
+
+
+    .startCard{
+  width: min(560px, 100%);
+  background:#fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 18px 48px rgba(15,23,42,0.14);
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+
+  /* NEU: Card nie höher als Viewport */
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+}
+
+#pickerScreen{ padding-top: 72px; }
+
+    .startTitle{
+      font-size: 22px;
+      font-weight: 1000;
+    }
+    .startSub{
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: -4px;
+      line-height: 1.35;
+    }
+    .startBtns{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    @media (max-width: 520px){
+      .startBtns{ grid-template-columns: 1fr; }
+    }
+    .startHint{
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    /* === Team Builder === */
+    .builderSlots{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    .slotRow{
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      padding: 10px 12px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      background:#fff;
+    }
+    .slotLeft{
+      display:flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .slotName{
+      font-weight: 1000;
+      font-size: 14px;
+      letter-spacing: 0.2px;
+    }
+    .slotMeta{
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      max-width: 54ch;
+    }
+/* NEU: Schuss-Range (rot) */
+.shootPoly{
+  fill: var(--shootFill);
+  stroke: var(--shootStroke);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+  pointer-events:none;
+
+  /* kleiner als Sicht-Overlay, damit es wie ein "innerer Radius" wirkt */
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.84);
+}
+
+    .pickerList{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+    @media (max-width: 520px){
+      .pickerList{ grid-template-columns: 1fr; }
+    }
+    .pickerBtn{
+      text-align:left;
+      padding: 12px;
+      border-radius: 12px;
+    }
+    .pickerBtn strong{ display:block; font-size: 14px; }
+    .pickerBtn span{ display:block; font-size: 12px; color: var(--muted); margin-top: 3px; line-height: 1.25; }
+  </style>
+</head>
+<body>
+
+<main class="page">
+  <header class="top">
+    <div class="leftHead">
+      <div><strong>Hex-Agon</strong></div>
+      <div class="hint" id="hintLine"></div>
+    </div>
+
+    <div class="hud">
+      <div class="pill"><span class="muted">Runde:</span> <strong id="roundVal">1</strong></div>
+      <div class="pill"><span class="muted">Spieler:</span> <strong id="playerVal">1</strong></div>
+      <div class="pill"><span class="muted">Phase:</span> <strong id="phaseVal">Bewegen</strong></div>
+      <button id="toggleOverviewBtn">Einheiten</button>
+      <button id="skipPhaseBtn">Phase überspringen</button>
+      <button id="endTurnBtn" disabled>Zug beenden</button>
+    </div>
+  </header>
+
+  <section class="unitOverview isOpen" id="unitOverview">
+    <div class="unitOverviewTop">
+      <div class="unitOverviewTitle">
+        <strong>Einheiten-Übersicht</strong>
+        <span id="unitOverviewSub">Aktueller Spieler: 1</span>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button id="collapseOverviewBtn">Ausblenden</button>
+      </div>
+    </div>
+    <div class="unitOverviewBody">
+      <div class="unitCols">
+        <div class="unitCol">
+          <div class="unitColHead">
+            <div class="tagP1"><span class="dotP1"></span>Spieler 1</div>
+            <div class="muted" id="p1Count">0</div>
+          </div>
+          <div class="unitList" id="p1List"></div>
+        </div>
+
+        <div class="unitCol">
+          <div class="unitColHead">
+            <div class="tagP2"><span class="dotP2"></span>Spieler 2</div>
+            <div class="muted" id="p2Count">0</div>
+          </div>
+          <div class="unitList" id="p2List"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="board" id="board" aria-label="Spielfeld">
+
+    <!-- Start Screen -->
+    <div class="startScreen isVisible" id="startScreen">
+      <div class="startCard">
+        <div class="startTitle">Hex-Agon</div>
+        <div class="startSub">
+          Offline (lokal, Gerät wird übergeben).<br>
+          Modus wählen – Map wird zufällig gewählt (aktuell 2 Maps).<br>
+          Danach Team Builder (Spieler 1, dann Spieler 2).
+        </div>
+
+        <div class="startBtns">
+          <button id="btnStart3">3v3 starten</button>
+          <button id="btnStart5">5v5 starten</button>
+        </div>
+
+        <div class="startHint">
+          Alle Einheiten sind von Anfang an verfügbar. Teams werden pro Spieler & Modus dauerhaft gespeichert.
+        </div>
+      </div>
+    </div>
+
+    <!-- Team Builder Screen -->
+    <div class="startScreen" id="builderScreen">
+      <div class="startCard" style="gap:12px;">
+        <div class="startTitle" id="builderTitle">Team Builder</div>
+        <div class="startSub" id="builderSub">Spieler 1 · Modus 3v3</div>
+
+        <div class="startHint" style="margin-top:-6px;">
+          Slots anklicken → Einheit wählen → speichern. Erst Spieler 1, dann Spieler 2. Danach startet das Match.
+        </div>
+
+        <div id="builderSlots" class="builderSlots"></div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+          <button id="btnBuilderClear">Standard</button>
+          <button id="btnBuilderBack">Zurück</button>
+          <button id="btnBuilderSaveNext">Speichern & weiter</button>
+        </div>
+
+        <div class="startHint" id="builderFoot">
+          Hinweis: Später kann hier ein Shop ergänzt werden, ohne das Match-System zu ändern.
+        </div>
+      </div>
+    </div>
+
+    <!-- Unit Picker (Overlay) -->
+    <div class="startScreen" id="pickerScreen" style="z-index:260;">
+
+      <div class="startCard">
+        <div class="startTitle" style="font-size:18px;">Einheit wählen</div>
+        <div class="startSub" id="pickerSub">Slot</div>
+        <div id="pickerList" class="pickerList"></div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
+          <button id="btnPickerCancel">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="modal">
+      <div class="modalCard">
+        <div class="modalTop">
+          <p class="modalTitle" id="modalTitle">Titel</p>
+          <p class="modalText" id="modalText">Text</p>
+        </div>
+        <div class="modalActions">
+          <button id="modalNoBtn">Nein</button>
+          <button id="modalYesBtn">Ja</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" aria-live="polite"></div>
+
+    <div class="privacy" id="privacy">
+      <div class="privacyCard">
+        <p class="privacyTitle" id="privacyTitle">Spieler 2</p>
+        <p class="privacyText">
+          Übergabe-Screen: Bitte Gerät übergeben. Der nächste Spieler soll „Bereit“ drücken.
+        </p>
+        <button id="readyBtn">Bereit</button>
+      </div>
+    </div>
+
+    <svg id="svg" class="hexsvg" role="img" aria-label="Hex Grid"></svg>
+  </section>
+</main>
+
+<script>
+  const baseCols = 8;
+  const rows = 17;
+
+  // Maps (2 Stück aktuell)
+  const MAPS = [
+    { id:"m1", img:"map-fantasy.jpg" },
+    { id:"m2", img:"map-fantasy-2.jpg" }
+  ];
+
+  // Wird beim Start aus dem Menü gesetzt
+  let MAP_IMAGE = MAPS[0].img;
+
+  const WATER_PASSABLE = true;
+
+  const svg = document.getElementById("svg");
+  const board = document.getElementById("board");
+
+  const skipPhaseBtn = document.getElementById("skipPhaseBtn");
+  const endTurnBtn = document.getElementById("endTurnBtn");
+  const readyBtn = document.getElementById("readyBtn");
+  const privacy = document.getElementById("privacy");
+
+  const roundVal = document.getElementById("roundVal");
+  const playerVal = document.getElementById("playerVal");
+  const phaseVal = document.getElementById("phaseVal");
+  const privacyTitle = document.getElementById("privacyTitle");
+  const hintLine = document.getElementById("hintLine");
+
+  const modal = document.getElementById("modal");
+  const modalTitle = document.getElementById("modalTitle");
+  const modalText = document.getElementById("modalText");
+  const modalYesBtn = document.getElementById("modalYesBtn");
+  const modalNoBtn = document.getElementById("modalNoBtn");
+
+  const toastEl = document.getElementById("toast");
+  let toastTimer = null;
+  let lastToastAt = 0;
+
+  const unitOverview = document.getElementById("unitOverview");
+  const unitOverviewSub = document.getElementById("unitOverviewSub");
+  const toggleOverviewBtn = document.getElementById("toggleOverviewBtn");
+  const collapseOverviewBtn = document.getElementById("collapseOverviewBtn");
+  const p1List = document.getElementById("p1List");
+  const p2List = document.getElementById("p2List");
+  const p1Count = document.getElementById("p1Count");
+  const p2Count = document.getElementById("p2Count");
+
+  // Start Screen elements
+  const startScreen = document.getElementById("startScreen");
+  const btnStart3 = document.getElementById("btnStart3");
+  const btnStart5 = document.getElementById("btnStart5");
+
+  // Team Builder elements
+  const builderScreen = document.getElementById("builderScreen");
+  const builderTitle = document.getElementById("builderTitle");
+  const builderSub = document.getElementById("builderSub");
+  const builderSlotsEl = document.getElementById("builderSlots");
+  const btnBuilderClear = document.getElementById("btnBuilderClear");
+  const btnBuilderBack = document.getElementById("btnBuilderBack");
+  const btnBuilderSaveNext = document.getElementById("btnBuilderSaveNext");
+
+  const pickerScreen = document.getElementById("pickerScreen");
+  const pickerSub = document.getElementById("pickerSub");
+  const pickerList = document.getElementById("pickerList");
+  const btnPickerCancel = document.getElementById("btnPickerCancel");
+  let pickerSlotIndex = -1;
+
+  // App State (menu/builder/game)
+  const app = {
+    screen: "menu",   // "menu" | "builder" | "game"
+    mode: "3v3",      // "3v3" | "5v5"
+    online: false,
+    map: null,
+
+    builderPlayer: 1,
+    builderSlots: [],
+  };
+
+  function showScreen(name){
+    app.screen = name;
+
+    startScreen.classList.toggle("isVisible", name === "menu");
+    builderScreen.classList.toggle("isVisible", name === "builder");
+    if (name !== "builder") pickerScreen.classList.remove("isVisible");
+
+    if (name === "menu"){
+      setHint("Start: Modus wählen (3v3 oder 5v5). Danach Team Builder (Spieler 1, dann Spieler 2).");
+    }
+    applyHUD();
+    renderUnitOverview();
+  }
+
+  function showStartScreen(){
+    showScreen("menu");
+  }
+  function hideStartScreen(){
+    startScreen.classList.remove("isVisible");
+  }
+
+  function pickRandomMap(){
+    return MAPS[Math.floor(Math.random() * MAPS.length)];
+  }
+
+  function getTypesForMode(mode){
+    // Standard-Team (als Default)
+    if (mode === "5v5") return ["tank","soldier","soldier","scout","scout"];
+    return ["tank","soldier","scout"];
+  }
+
+  // ===== Team Storage (localStorage) =====
+  const STORAGE_KEY = "hexagon_teams_v1";
+
+  function loadAllTeams(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+    catch{ return {}; }
+  }
+  function saveAllTeams(obj){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
+  }
+  function defaultTeamForMode(mode){
+    return getTypesForMode(mode).slice();
+  }
+  function loadTeam(player, mode){
+    const all = loadAllTeams();
+    const p = all[String(player)] || {};
+    const t = p[mode];
+    if (Array.isArray(t) && t.length) return t.slice();
+    return defaultTeamForMode(mode);
+  }
+  function saveTeam(player, mode, teamArr){
+    const all = loadAllTeams();
+    const pKey = String(player);
+    all[pKey] = all[pKey] || {};
+    all[pKey][mode] = teamArr.slice();
+    saveAllTeams(all);
+  }
+
+  // ===== Toast =====
+  function toast(msg, kind = "warn", ms = 1600){
+    const now = Date.now();
+    if (now - lastToastAt < 90) return;
+    lastToastAt = now;
+
+    toastEl.textContent = msg;
+    toastEl.classList.remove("toast--ok","toast--warn","toast--bad","isVisible");
+    toastEl.classList.add("toast--" + kind, "isVisible");
+
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toastEl.classList.remove("isVisible");
+    }, ms);
+  }
+
+  function abilityMayTargetFog(kind){
+  // Nur Aufklärung darf ins Unbekannte
+  return [
+    "target_reveal_single",
+    "target_reveal_area",
+  ].includes(kind);
+}
+
+  function isRevealTargeting(){
+  return (
+    game.phase === "ability" &&
+    game.abilityMode === "target" &&
+    abilityMayTargetFog(game.abilityKind)
+  );
+}
+
+  // ============ Terrain / Phases
+  const TERRAIN = { LAND:"land", WATER:"water", FOREST:"forest" };
+  // === Forest penalties ===
+const FOREST_VISION_PENALTY = 1;
+const FOREST_RANGE_PENALTY  = 2;
+
+function terrainAtRC(row, col){
+  return game.terrainAt.get(keyOf(row,col)) ?? TERRAIN.LAND;
+}
+
+function inForest(unit){
+  return terrainAtRC(unit.row, unit.col) === TERRAIN.FOREST;
+}
+
+function effVision(unit){
+  const v = (unit.vision|0) - (inForest(unit) ? FOREST_VISION_PENALTY : 0);
+  return Math.max(1, v);
+}
+
+function effRange(unit){
+  const r = (unit.range|0) - (inForest(unit) ? FOREST_RANGE_PENALTY : 0);
+  return Math.max(1, r);
+}
+
+  const PHASES = ["move","ability","shoot"];
+
+  // ============ Units (25)
+  const UNIT_DEFS = {
+    tank:   { key:"tank",   name:"Panzer", role:"Schwere Front",   move: 6,  atk: 4, hp: 5, vision: 2, range: 8, movePenaltyNext: 2, hitBase: 0.75,
+      ability:{ id:"kriegsmodus", title:"Kriegsmodus", text:"Effekt: +1 Angriff (nur diese Runde).\nNachteil: -2 MP nächste Runde.", kind:"self_buff_atk", params:{atkPlus:1, until:"turnEnd"} } },
+    soldier:{ key:"soldier",name:"Soldat", role:"Allrounder",       move:10,  atk: 2, hp: 4, vision: 3, range: 5, movePenaltyNext: 4, hitBase: 0.65,
+      ability:{ id:"adrenalin", title:"Adrenalin", text:"Effekt: +1 HP (bis Max).\nNachteil: -4 MP nächste Runde.", kind:"self_heal", params:{hpPlus:1} } },
+    scout:  { key:"scout",  name:"Späher", role:"Aufklärung",       move:16,  atk: 1, hp: 2, vision: 6, range: 3, movePenaltyNext: 8, hitBase: 0.55,
+      ability:{ id:"aufklaerung", title:"Aufklärung", text:"Effekt: Wähle ein Feld, das 2 Runden aufgedeckt wird.\nNachteil: -8 MP nächste Runde.", kind:"target_reveal_single", params:{revealRounds:2} } },
+
+    ritter:{ name:"Ritter", role:"Schwerer Frontkämpfer", move: 6, atk: 3, hp: 6, vision: 2, range: 1, movePenaltyNext: 2, hitBase: 0.70,
+      ability:{ id:"schildwall", title:"Schildwall", text:"Effekt: Erhalte 1 temporäres Schild (1 Schaden wird absorbiert) bis zum Ende der nächsten gegnerischen Runde.\nNachteil: -2 MP nächste Runde.", kind:"self_temp_shield", params:{shield:1, rounds:2} } },
+    schildtraeger:{ name:"Schildträger", role:"Defensive Blockeinheit", move: 5, atk: 2, hp: 6, vision: 2, range: 1, movePenaltyNext: 3, hitBase: 0.68,
+      ability:{ id:"blockstellung", title:"Blockstellung", text:"Effekt: Wähle ein Feld (sichtbar). Dieses Feld ist 1 Runde blockiert (niemand kann es betreten).\nNachteil: -3 MP nächste Runde.", kind:"target_block_hex", params:{blockRounds:1} } },
+    bogenschuetze:{ name:"Bogenschütze", role:"Fernkämpfer", move: 9, atk: 3, hp: 3, vision: 4, range: 4, movePenaltyNext: 2, hitBase: 0.62,
+      ability:{ id:"gezielter_schuss", title:"Gezielter Schuss", text:"Effekt: +15% Trefferchance für deinen nächsten Schuss diese Runde.\nNachteil: -2 MP nächste Runde.", kind:"self_hit_bonus", params:{hitBonus:0.15, until:"turnEnd"} } },
+    armbrustschuetze:{ name:"Armbrustschütze", role:"Präzisionsschütze", move: 7, atk: 4, hp: 3, vision: 3, range: 5, movePenaltyNext: 3, hitBase: 0.60,
+      ability:{ id:"ruestungsdurchschlag", title:"Rüstungsdurchschlag", text:"Effekt: +1 Schaden gegen Ziele mit HP-Max ≥ 5 (nächster Schuss diese Runde).\nNachteil: -3 MP nächste Runde.", kind:"self_bonus_vs_heavy", params:{bonus:1, heavyHpMax:5, until:"turnEnd"} } },
+    pikenier:{ name:"Pikenier", role:"Anti-Sturm-Infanterie", move: 8, atk: 3, hp: 4, vision: 3, range: 2, movePenaltyNext: 2, hitBase: 0.66,
+      ability:{ id:"spiessformation", title:"Spießformation", text:"Effekt: +1 Schaden gegen Ziele mit HP-Max ≥ 5 (nächster Schuss diese Runde).\nNachteil: -2 MP nächste Runde.", kind:"self_bonus_vs_heavy", params:{bonus:1, heavyHpMax:5, until:"turnEnd"} } },
+    katapult:{ name:"Katapult", role:"Belagerungseinheit", move: 4, atk: 5, hp: 3, vision: 2, range: 6, movePenaltyNext: 4, hitBase: 0.52,
+      ability:{ id:"flaechenbeschuss", title:"Flächenbeschuss", text:"Effekt: Wähle ein Feld (sichtbar). Zieleinheit + Nachbarfelder werden beschossen (AoE, je Ziel 70% Trefferchance, 1 Schaden).\nNachteil: -4 MP nächste Runde.", kind:"target_aoe_damage", params:{radius:1, damage:1, hitChance:0.70} } },
+
+    zauberer:{ name:"Zauberer", role:"Glaskanone", move: 8, atk: 4, hp: 2, vision: 4, range: 4, movePenaltyNext: 4, hitBase: 0.58,
+      ability:{ id:"arkane_entladung", title:"Arkane Entladung", text:"Effekt: +2 Schaden für den nächsten Schuss diese Runde.\nNachteil: -4 MP nächste Runde.", kind:"self_bonus_damage_next", params:{bonus:2, until:"turnEnd"} } },
+    feuermagier:{ name:"Feuermagier", role:"Burst-Zauberer", move: 7, atk: 5, hp: 2, vision: 3, range: 3, movePenaltyNext: 4, hitBase: 0.56,
+      ability:{ id:"feuerstoss", title:"Feuerstoß", text:"Effekt: Setzt Brand auf Ziel (bei Treffer): Ziel erhält am Start seiner nächsten Runde 1 Schaden.\nNachteil: -4 MP nächste Runde.", kind:"self_apply_burn", params:{burnDamage:1, burnRounds:1} } },
+    eismagier:{ name:"Eismagier", role:"Kontrollzauberer", move: 7, atk: 3, hp: 3, vision: 4, range: 3, movePenaltyNext: 3, hitBase: 0.60,
+      ability:{ id:"frostgriff", title:"Frostgriff", text:"Effekt: Nächster Treffer verlangsamt Ziel: -4 MP in seiner nächsten Runde.\nNachteil: -3 MP nächste Runde.", kind:"self_apply_slow", params:{slowAmount:4, slowRounds:1} } },
+    nekromant:{ name:"Nekromant", role:"Zermürber", move: 7, atk: 2, hp: 3, vision: 4, range: 3, movePenaltyNext: 3, hitBase: 0.60,
+      ability:{ id:"lebensentzug", title:"Lebensentzug", text:"Effekt: Nächster Treffer heilt dich um 1.\nNachteil: -3 MP nächste Runde.", kind:"self_lifesteal_next", params:{heal:1} } },
+    paladin:{ name:"Paladin", role:"Verteidiger & Unterstützer", move: 7, atk: 3, hp: 5, vision: 3, range: 1, movePenaltyNext: 3, hitBase: 0.70,
+      ability:{ id:"heiliger_schutz", title:"Heiliger Schutz", text:"Effekt: Wähle einen Verbündeten (sichtbar). Er erhält 1 Schild (1 Schaden absorbiert) bis zum Ende der nächsten gegnerischen Runde.\nNachteil: -3 MP nächste Runde.", kind:"target_give_shield_ally", params:{shield:1, rounds:2} } },
+    waldlaeufer:{ name:"Waldläufer", role:"Getarnter Fernkämpfer", move:10, atk: 3, hp: 3, vision: 5, range: 3, movePenaltyNext: 4, hitBase: 0.62,
+      ability:{ id:"spaeherblick", title:"Späherblick", text:"Effekt: Wähle ein Feld. Dieses Feld + Nachbarfelder werden 2 Runden aufgedeckt.\nNachteil: -4 MP nächste Runde.", kind:"target_reveal_area", params:{revealRounds:2, radius:1} } },
+    beschwoerer:{ name:"Beschwörer", role:"Gebietskontrolleur", move: 6, atk: 2, hp: 3, vision: 4, range: 3, movePenaltyNext: 3, hitBase: 0.58,
+      ability:{ id:"beschworene_zone", title:"Beschworene Zone", text:"Effekt: Wähle ein Feld (sichtbar). Gegner zahlen 2× Bewegungskosten beim Betreten dieses Feldes (1 Runde).\nNachteil: -3 MP nächste Runde.", kind:"target_danger_zone", params:{factor:2, rounds:1} } },
+
+    ninja:{ name:"Ninja", role:"Attentäter", move:12, atk: 4, hp: 3, vision: 4, range: 2, movePenaltyNext: 4, hitBase: 0.62,
+      ability:{ id:"schattenstoss", title:"Schattenstoß", text:"Effekt: Nächster Treffer aus Wald verursacht +1 Schaden.\nNachteil: -4 MP nächste Runde.", kind:"self_forest_damage_bonus_next", params:{bonus:1} } },
+    schattenninja:{ name:"Schatten-Ninja", role:"Tarnassassine", move:11, atk: 5, hp: 2, vision: 4, range: 2, movePenaltyNext: 5, hitBase: 0.58,
+      ability:{ id:"verschwinden", title:"Verschwinden", text:"Effekt: Du wirst bis zum Ende der nächsten gegnerischen Runde 'unsichtbar' (außer Nahsicht).\nNachteil: -5 MP nächste Runde.", kind:"self_invisible", params:{rounds:2, spotRange:1} } },
+    samurai:{ name:"Samurai", role:"Duellant", move: 9, atk: 4, hp: 4, vision: 3, range: 1, movePenaltyNext: 3, hitBase: 0.72,
+      ability:{ id:"duellhaltung", title:"Duellhaltung", text:"Effekt: Wenn du diese Runde triffst, verursachst du +1 Schaden (nächster Treffer).\nNachteil: -3 MP nächste Runde.", kind:"self_bonus_damage_next", params:{bonus:1, until:"turnEnd"} } },
+    ronin:{ name:"Ronin", role:"Aggressiver Nahkämpfer", move:11, atk: 3, hp: 3, vision: 3, range: 1, movePenaltyNext: 4, hitBase: 0.70,
+      ability:{ id:"vorstoss", title:"Vorstoß", text:"Effekt: +3 MP sofort, aber du erhältst 1 Schaden am Ende der Runde.\nNachteil: -4 MP nächste Runde.", kind:"self_dash_with_cost", params:{mpPlus:3, selfDamageEndTurn:1} } },
+    shinobispaher:{ name:"Shinobi-Späher", role:"Aufklärungseinheit", move:14, atk: 1, hp: 2, vision: 5, range: 1, movePenaltyNext: 6, hitBase: 0.55,
+      ability:{ id:"totale_aufklaerung", title:"Totale Aufklärung", text:"Effekt: Dein Team sieht 1 Runde lang die gesamte Karte (Fog aufgehoben).\nNachteil: -6 MP nächste Runde.", kind:"global_reveal_all", params:{rounds:1} } },
+    anime_schuetze:{ name:"Anime-Schütze", role:"Mobiler Fernkämpfer", move: 9, atk: 4, hp: 3, vision: 3, range: 4, movePenaltyNext: 5, hitBase: 0.60,
+      ability:{ id:"schnellfeuer", title:"Schnellfeuer", text:"Effekt: Du hast diese Runde 2 Schüsse (2×), jeder Schuss verursacht -1 Schaden.\nNachteil: -5 MP nächste Runde.", kind:"self_double_shot", params:{shots:2, dmgMinusPerShot:1, until:"turnEnd"} } },
+
+    raketeninfanterist:{ name:"Raketeninfanterist", role:"Anti-Panzer-Einheit", move: 8, atk: 5, hp: 3, vision: 2, range: 4, movePenaltyNext: 4, hitBase: 0.52, tags:["missile"],
+      ability:{ id:"panzerfaust", title:"Panzerfaust", text:"Effekt: Nächster Treffer gegen HP-Max ≥ 5 verursacht +2 Schaden.\nNachteil: -4 MP nächste Runde.", kind:"self_bonus_vs_heavy", params:{bonus:2, heavyHpMax:5, until:"turnEnd"} } },
+    raketenpanzer:{ name:"Raketenpanzer", role:"Artillerie", move: 4, atk: 4, hp: 5, vision: 2, range: 5, movePenaltyNext: 5, hitBase: 0.50, tags:["missile"],
+      ability:{ id:"sperrfeuer", title:"Sperrfeuer", text:"Effekt: Wähle ein Feld (sichtbar). Zieleinheit + Nachbarfelder: bei Treffer 1 Schaden (70%).\nNachteil: -5 MP nächste Runde.", kind:"target_aoe_damage", params:{radius:1, damage:1, hitChance:0.70} } },
+    raketenabwehrer:{ name:"Raketenabwehrer", role:"Kontereinheit", move: 7, atk: 1, hp: 4, vision: 4, range: 3, movePenaltyNext: 4, hitBase: 0.62,
+      ability:{ id:"abfangsystem", title:"Abfangsystem", text:"Effekt: Der nächste 'Raketen'-Treffer gegen dein Team wird in dieser Runde negiert.\nNachteil: -4 MP nächste Runde.", kind:"team_missile_shield", params:{until:"turnEnd"} } },
+  };
+
+  // ===== Unit Catalog (alle Einheiten verfügbar) =====
+  const UNIT_KEYS = Object.keys(UNIT_DEFS);
+  function unitLabelName(type){
+    const d = UNIT_DEFS[type];
+    return d ? d.name : type;
+  }
+  function unitLabelRole(type){
+    const d = UNIT_DEFS[type];
+    return d ? d.role : "";
+  }
+  function unitStatsLine(type){
+    const d = UNIT_DEFS[type];
+    if (!d) return "";
+    return `MP ${d.move} · Sicht ${d.vision} · Range ${d.range} · ATK ${d.atk} · HP ${d.hp}`;
+  }
+  function abilityTextForUI(type){
+  const d = UNIT_DEFS[type];
+  if (!d || !d.ability) return "Fähigkeit: –";
+  const a = d.ability;
+
+  const costMp = (d.movePenaltyNext|0) > 0
+    ? `Kosten: -${d.movePenaltyNext} MP nächste Runde.`
+    : `Kosten: –`;
+
+  // a.text enthält bereits Effekt/Nachteil (teilweise inkl. MP). Wir zeigen beides:
+  // 1) Titel
+  // 2) Effekt/Nachteil (a.text)
+  // 3) Standard-Kostenzeile (MP)
+  return `Fähigkeit: ${a.title}\n${a.text}\n${costMp}`;
+}
+
+function abilityInlineForCard(type){
+  const d = UNIT_DEFS[type];
+  if (!d || !d.ability) return "Fähigkeit: –";
+  const a = d.ability;
+  const costMp = (d.movePenaltyNext|0) > 0 ? `Kosten: -${d.movePenaltyNext} MP nächste Runde` : `Kosten: –`;
+  return `Fähigkeit: ${a.title} · ${costMp}`;
+}
+
+
+  function startBuilder(mode){
+    app.mode = mode;
+    app.builderPlayer = 1;
+    app.builderSlots = loadTeam(1, mode);
+    renderBuilder();
+    showScreen("builder");
+  }
+
+  function renderBuilder(){
+    builderTitle.textContent = "Team Builder";
+    builderSub.textContent = `Spieler ${app.builderPlayer} · Modus ${app.mode}`;
+
+    const desiredSlots = (app.mode === "5v5") ? 5 : 3;
+    if (!Array.isArray(app.builderSlots)) app.builderSlots = defaultTeamForMode(app.mode);
+    if (app.builderSlots.length !== desiredSlots){
+      // normalize length
+      const base = defaultTeamForMode(app.mode);
+      app.builderSlots = base.slice(0, desiredSlots);
+    }
+
+    builderSlotsEl.innerHTML = "";
+    app.builderSlots.forEach((type, idx) => {
+      const row = document.createElement("div");
+      row.className = "slotRow";
+
+      const left = document.createElement("div");
+      left.className = "slotLeft";
+
+      const name = document.createElement("div");
+      name.className = "slotName";
+      name.textContent = `Slot ${idx+1}: ${unitLabelName(type)} — ${unitLabelRole(type)}`;
+
+      const meta = document.createElement("div");
+      meta.className = "slotMeta";
+      meta.textContent = unitStatsLine(type);
+
+      left.appendChild(name);
+      left.appendChild(meta);
+
+      const btn = document.createElement("button");
+      btn.textContent = "Ändern";
+      btn.addEventListener("click", () => openPicker(idx));
+
+      row.appendChild(left);
+      row.appendChild(btn);
+      builderSlotsEl.appendChild(row);
+    });
+  }
+
+  function openPicker(slotIndex){
+    pickerSlotIndex = slotIndex;
+    pickerSub.textContent = `Slot ${slotIndex+1} · Spieler ${app.builderPlayer} · ${app.mode}`;
+
+    pickerList.innerHTML = "";
+
+    // Sortiert nach Name (ruhiger, besser findbar)
+    const typesSorted = UNIT_KEYS.slice().sort((a,b) => {
+      const an = (UNIT_DEFS[a]?.name || a).toLowerCase();
+      const bn = (UNIT_DEFS[b]?.name || b).toLowerCase();
+      return an.localeCompare(bn);
+    });
+
+    for (const type of typesSorted){
+      const d = UNIT_DEFS[type];
+      const b = document.createElement("button");
+      b.className = "pickerBtn";
+const abilityLine = abilityInlineForCard(type);
+b.innerHTML =
+  `<strong>${d.name} — ${d.role}</strong>` +
+  `<span>${unitStatsLine(type)}</span>` +
+  `<span style="white-space:pre-wrap; margin-top:6px;">${abilityLine}</span>`;
+      b.addEventListener("click", () => {
+        app.builderSlots[pickerSlotIndex] = type;
+        pickerScreen.classList.remove("isVisible");
+        renderBuilder();
+      });
+      pickerList.appendChild(b);
+    }
+
+    pickerScreen.classList.add("isVisible");
+  }
+
+  btnPickerCancel.addEventListener("click", () => {
+    pickerScreen.classList.remove("isVisible");
+  });
+
+  btnBuilderClear.addEventListener("click", () => {
+    app.builderSlots = defaultTeamForMode(app.mode);
+    renderBuilder();
+  });
+
+  btnBuilderBack.addEventListener("click", () => {
+    showScreen("menu");
+  });
+
+  btnBuilderSaveNext.addEventListener("click", async () => {
+    // speichern für aktuellen Spieler
+    saveTeam(app.builderPlayer, app.mode, app.builderSlots);
+
+    if (app.builderPlayer === 1){
+      app.builderPlayer = 2;
+      app.builderSlots = loadTeam(2, app.mode);
+      renderBuilder();
+      toast("Spieler 1 gespeichert. Jetzt Spieler 2.", "ok", 1600);
+      return;
+    }
+
+    toast("Spieler 2 gespeichert. Match startet…", "ok", 1400);
+    await startNewMatch(app.mode);
+  });
+
+  function resetWholeGameStateForNewMatch(){
+    game.round = 1;
+    game.activePlayer = 1;
+    game.phase = "move";
+    game.locked = false;
+    game.selectedUnitId = null;
+    game.turnIndex = 1;
+
+
+    game.reveals = [];
+    game.revealAllUntilRoundByPlayer = { 1: 0, 2: 0 };
+
+    game.blockedHexes = [];
+    game.dangerZones = [];
+    game.abilityMode = null;
+    game.abilitySourceUnitId = null;
+    game.abilityKind = null;
+
+    game.modalOpen = false;
+    clearMovePlanning();
+
+    game.units = [];
+    game.terrainAt = new Map();
+    game.centers = [];
+    game.centerByKey = new Map();
+    game.visible = new Set();
+
+    game.world = { w: 1000, h: 0, r: 0, dx:0, dy:0, startX:0, startY:0 };
+  }
+
+  async function startNewMatch(mode){
+    app.screen = "game";
+    app.mode = mode;
+    app.online = false;
+    app.map = pickRandomMap();
+    MAP_IMAGE = app.map.img;
+
+    resetWholeGameStateForNewMatch();
+    hideStartScreen();
+    builderScreen.classList.remove("isVisible");
+    pickerScreen.classList.remove("isVisible");
+
+    await buildOnce().catch(console.error);
+  }
+
+  // Start buttons -> Builder statt direkt Match
+  btnStart3.addEventListener("click", () => startBuilder("3v3"));
+  btnStart5.addEventListener("click", () => startBuilder("5v5"));
+
+  // ============ Spiel-State
+  const game = {
+    round: 1,
+    activePlayer: 1,
+    phase: "move",
+    locked: false,
+
+    units: [],
+    selectedUnitId: null,
+
+    terrainAt: new Map(),
+    centers: [],
+    centerByKey: new Map(),
+    world: { w: 1000, h: 0, r: 0, dx:0, dy:0, startX:0, startY:0 },
+
+    visible: new Set(),
+
+    reveals: [],
+    revealAllUntilRoundByPlayer: { 1: 0, 2: 0 },
+
+    blockedHexes: [],
+    dangerZones: [],
+
+    abilityMode: null,
+    abilitySourceUnitId: null,
+    abilityKind: null,
+    abilityPayload: null,
+
+    reachableCost: new Map(),
+    reachablePrev: new Map(),
+
+    missileShieldThisTurn: { 1:false, 2:false },
+    turnIndex: 1,  // zählt jeden Spielerzug (P1->P2->P1...)
+
+
+    modalOpen: false,
+
+    clues: [],  // { forPlayer, row, col, expiresAtRound, kind:"shot" }
+
+  };
+
+  function setHint(msg){ hintLine.textContent = msg; }
+
+  function openModal({title, text, yesText="Ja", noText="Nein"}){
+    return new Promise((resolve) => {
+      game.modalOpen = true;
+      modalTitle.textContent = title;
+      modalText.textContent = text;
+      modalYesBtn.textContent = yesText;
+      modalNoBtn.textContent = noText;
+
+      modal.classList.add("isVisible");
+
+      const cleanup = () => {
+        modal.classList.remove("isVisible");
+        game.modalOpen = false;
+        modalYesBtn.onclick = null;
+        modalNoBtn.onclick = null;
+        applyHUD();
+      };
+
+      modalYesBtn.onclick = () => { cleanup(); resolve(true); };
+      modalNoBtn.onclick  = () => { cleanup(); resolve(false); };
+    });
+  }
+
+  function setLocked(isLocked){
+    game.locked = isLocked;
+    privacy.classList.toggle("isVisible", isLocked);
+    board.classList.toggle("isLocked", isLocked);
+    applyHUD();
+  }
+
+  function showPrivacyForNextPlayer(nextPlayer){
+    privacyTitle.textContent = `Spieler ${nextPlayer}`;
+    setLocked(true);
+  }
+
+  function colsInRow(row){ return (row % 2 === 0) ? baseCols : (baseCols + 1); }
+  function keyOf(row,col){ return `${row},${col}`; }
+  function parseKey(k){ const [r,c]=k.split(",").map(Number); return {row:r,col:c}; }
+
+  function phaseName(p){
+    if (p === "move") return "Bewegen";
+    if (p === "ability") return "Fähigkeit";
+    return "Schießen";
+  }
+
+  function applyHUD(){
+    roundVal.textContent = String(game.round);
+    playerVal.textContent = String(game.activePlayer);
+    phaseVal.textContent = phaseName(game.phase);
+
+    const inMenu = (app.screen !== "game");
+
+    skipPhaseBtn.disabled = inMenu || game.locked || game.modalOpen;
+    endTurnBtn.disabled = inMenu || game.locked || game.modalOpen || game.phase !== "shoot";
+
+    if (inMenu) return;
+
+    if (game.abilityMode === "target"){
+      setHint("Fähigkeit: Ziel-Feld klicken.");
+      return;
+    }
+
+    if (game.phase === "move"){
+      setHint("Move: Einheit wählen → Feld klicken (MP wird abgezogen). Sichtweite (nur dieser Einheit) wird hell angezeigt.");
+    } else if (game.phase === "ability"){
+      setHint("Ability: Einheit wählen → Fähigkeit bestätigen. Ziel-Fähigkeiten: danach Feld anklicken.");
+    } else {
+      setHint("Shoot: Angreifer wählen → Gegner anklicken (oder leeres Feld für Blindschuss). Reichweite wird hell angezeigt.");
+    }
+  }
+
+  function hexPoints(r){
+    const angles = [-90, -30, 30, 90, 150, 210];
+    return angles.map(a => {
+      const rad = a * Math.PI / 180;
+      const x = r * Math.cos(rad);
+      const y = r * Math.sin(rad);
+      return `${x.toFixed(6)},${y.toFixed(6)}`;
+    }).join(" ");
+  }
+
+  function neighbors(row, col){
+    const even = (row % 2 === 0);
+    const dirsEven = [
+      {dr:0, dc:-1},{dr:0, dc:+1},
+      {dr:-1, dc:0},{dr:-1, dc:-1},
+      {dr:+1, dc:0},{dr:+1, dc:-1},
+    ];
+    const dirsOdd = [
+      {dr:0, dc:-1},{dr:0, dc:+1},
+      {dr:-1, dc:0},{dr:-1, dc:+1},
+      {dr:+1, dc:0},{dr:+1, dc:+1},
+    ];
+    const dirs = even ? dirsEven : dirsOdd;
+    const res = [];
+    for (const d of dirs){
+      const r2 = row + d.dr;
+      const c2 = col + d.dc;
+      if (r2 < 0 || r2 >= rows) continue;
+      const cols2 = colsInRow(r2);
+      if (c2 < 0 || c2 >= cols2) continue;
+      res.push({row:r2, col:c2});
+    }
+    return res;
+  }
+
+  function offsetEvenR_toAxial(row, col){
+    const q = col - Math.floor((row + (row & 1)) / 2);
+    const r = row;
+    return {q, r};
+  }
+
+  function hexDistance(aRow, aCol, bRow, bCol){
+    const a = offsetEvenR_toAxial(aRow, aCol);
+    const b = offsetEvenR_toAxial(bRow, bCol);
+    const dq = a.q - b.q;
+    const dr = a.r - b.r;
+    const ds = (a.q + a.r) - (b.q + b.r);
+    return (Math.abs(dq) + Math.abs(dr) + Math.abs(ds)) / 2;
+  }
+
+  function rgbToHsv(r,g,b){
+    r/=255; g/=255; b/=255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    const d=max-min;
+    let h=0;
+    if (d !== 0){
+      if (max===r) h = ((g-b)/d) % 6;
+      else if (max===g) h = (b-r)/d + 2;
+      else h = (r-g)/d + 4;
+      h *= 60;
+      if (h < 0) h += 360;
+    }
+    const s = (max === 0) ? 0 : d/max;
+    const v = max;
+    return {h,s,v};
+  }
+
+  function sampleAvg(ctx, x, y, radiusPx){
+    const ix = Math.max(0, Math.floor(x - radiusPx));
+    const iy = Math.max(0, Math.floor(y - radiusPx));
+    const iw = Math.max(1, Math.floor(radiusPx * 2));
+    const ih = Math.max(1, Math.floor(radiusPx * 2));
+    const img = ctx.getImageData(ix, iy, iw, ih);
+    const data = img.data;
+
+    let rr=0, gg=0, bb=0, n=0;
+    for(let i=0; i<data.length; i+=4){
+      const r=data[i], g=data[i+1], b=data[i+2], a=data[i+3];
+      if (a < 10) continue;
+      rr += r; gg += g; bb += b; n++;
+    }
+    if (!n) return {r:255,g:255,b:255};
+    return {r: rr/n, g: gg/n, b: bb/n};
+  }
+
+  function drawImageCover(ctx, img, dx, dy, dWidth, dHeight){
+    const iw = img.naturalWidth || img.width;
+    const ih = img.naturalHeight || img.height;
+
+    const scale = Math.max(dWidth / iw, dHeight / ih);
+    const sw = dWidth / scale;
+    const sh = dHeight / scale;
+
+    const sx = (iw - sw) / 2;
+    const sy = (ih - sh) / 2;
+
+    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dWidth, dHeight);
+  }
+
+  function classifyTerrain(avg){
+    const {h,s,v} = rgbToHsv(avg.r, avg.g, avg.b);
+
+    const blueDominant  = (avg.b > avg.r + 14) && (avg.b > avg.g + 6);
+    const greenDominant = (avg.g > avg.r + 6)  && (avg.g > avg.b - 14);
+
+    const isWaterHue = (h >= 140 && h <= 255);
+    const waterScore =
+      (isWaterHue ? 1 : 0) +
+      (blueDominant ? 1 : 0) +
+      (s > 0.12 ? 1 : 0) +
+      (v > 0.22 ? 1 : 0);
+
+    if (waterScore >= 3) return TERRAIN.WATER;
+
+    const isForestHue = (h >= 65 && h <= 175);
+    const forestScore =
+      (isForestHue ? 1 : 0) +
+      (greenDominant ? 1 : 0) +
+      (s > 0.12 ? 1 : 0) +
+      (v < 0.50 ? 1 : 0);
+
+    if (forestScore >= 2) return TERRAIN.FOREST;
+    return TERRAIN.LAND;
+  }
+
+  function classifyByVoting(ctx, cx, cy, r){
+    const rr = Math.max(10, r * 0.70);
+    const samples = [
+      sampleAvg(ctx, cx, cy, rr),
+      sampleAvg(ctx, cx + rr*0.35, cy, rr),
+      sampleAvg(ctx, cx - rr*0.35, cy, rr),
+      sampleAvg(ctx, cx, cy + rr*0.35, rr),
+      sampleAvg(ctx, cx, cy - rr*0.35, rr),
+    ];
+
+    const votes = { land:0, water:0, forest:0 };
+    for (const s of samples) votes[classifyTerrain(s)]++;
+    return Object.entries(votes).sort((a,b)=>b[1]-a[1])[0][0];
+  }
+
+  function terrainCost(t){
+    if (t === TERRAIN.FOREST) return 3;
+    if (t === TERRAIN.WATER) return 2;
+    return 1;
+  }
+
+  function isPassable(t){
+    if (t === TERRAIN.WATER && !WATER_PASSABLE) return false;
+    return true;
+  }
+
+  function isHexBlocked(row,col){
+    const k = keyOf(row,col);
+    for (const b of game.blockedHexes){
+      if (game.round > b.expiresAtRound) continue;
+      if (keyOf(b.row,b.col) === k) return true;
+    }
+    return false;
+  }
+
+  function movementZoneFactorFor(row,col, moverPlayer){
+    const k = keyOf(row,col);
+    let factor = 1;
+    for (const z of game.dangerZones){
+      if (game.round > z.expiresAtRound) continue;
+      if (keyOf(z.row,z.col) !== k) continue;
+      if (z.owner !== moverPlayer) factor = Math.max(factor, z.factor);
+    }
+    return factor;
+  }
+
+  function makeUnit(ownerPlayer, type, row, col){
+    const def = UNIT_DEFS[type];
+    if (!def) throw new Error("Unknown unit type: " + type);
+
+    return {
+      id: (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
+      owner: ownerPlayer,
+      type,
+      name: def.name,
+      role: def.role,
+      tags: Array.isArray(def.tags) ? [...def.tags] : [],
+
+      row, col,
+
+      hpMax: def.hp,
+      hp: def.hp,
+
+      atkBase: def.atk,
+      atkBuff: 0,
+
+      vision: def.vision,
+      range: def.range,
+
+      moveMax: def.move,
+      moveLeft: def.move,
+
+      pendingMovePenalty: 0,
+
+      state: { ability:false, shotsUsed:0 },
+
+      statuses: {
+        tempShield: 0,
+        tempShieldExpiresAtRound: 0,
+
+        hitBonus: 0,
+        hitBonusExpiresAtRound: 0,
+
+        bonusDamageNext: 0,
+        bonusDamageNextExpiresAtRound: 0,
+
+        bonusVsHeavy: 0,
+        bonusVsHeavyHpMax: 0,
+        bonusVsHeavyExpiresAtRound: 0,
+
+        burnDamage: 0,
+        burnAppliesAtRound: 0,
+
+        slowAmount: 0,
+        slowAppliesAtRound: 0,
+
+        lifestealHeal: 0,
+        lifestealExpiresAtRound: 0,
+
+        forestDamageBonus: 0,
+        forestDamageBonusExpiresAtRound: 0,
+
+        invisible: false,
+        invisibleExpiresAtRound: 0,
+        invisibleSpotRange: 1,
+
+        doubleShot: false,
+        doubleShotShots: 1,
+        doubleShotDmgMinus: 0,
+        doubleShotExpiresAtRound: 0,
+
+        dashSelfDamage: 0,
+        dashSelfDamageAppliesAtRound: 0,
+      },
+    };
+  }
+
+  function unitAt(row,col){ return game.units.find(u => u.row === row && u.col === col); }
+
+  function canSpawnAt(row,col){
+    const t = game.terrainAt.get(keyOf(row,col));
+    if (!t) return false;
+    if (!isPassable(t)) return false;
+    if (isHexBlocked(row,col)) return false;
+    if (unitAt(row,col)) return false;
+    return true;
+  }
+
+  function randomInt(min, maxInclusive){
+    return Math.floor(Math.random() * (maxInclusive - min + 1)) + min;
+  }
+
+  // ===== Spawn: Teams aus Builder laden (P1 + P2) =====
+  function spawnInitialUnits(){
+    game.units = [];
+
+    const teamP1 = loadTeam(1, app.mode);
+    const teamP2 = loadTeam(2, app.mode);
+
+    // Spieler 1 oben
+    for (const type of teamP1){
+      let tries = 0;
+      while (tries++ < 800){
+        const row = randomInt(0, 4);
+        const col = randomInt(0, colsInRow(row)-1);
+        if (canSpawnAt(row,col)){
+          game.units.push(makeUnit(1, type, row, col));
+          break;
+        }
+      }
+    }
+
+    // Spieler 2 unten
+    for (const type of teamP2){
+      let tries = 0;
+      while (tries++ < 800){
+        const row = randomInt(rows-5, rows-1);
+        const col = randomInt(0, colsInRow(row)-1);
+        if (canSpawnAt(row,col)){
+          game.units.push(makeUnit(2, type, row, col));
+          break;
+        }
+      }
+    }
+  }
+
+  function pruneExpiredBoardEffects(){
+    game.blockedHexes = game.blockedHexes.filter(b => game.round <= b.expiresAtRound);
+    game.dangerZones = game.dangerZones.filter(z => game.round <= z.expiresAtRound);
+  }
+
+  function pruneExpiredClues(){
+  game.clues = game.clues.filter(c => game.turnIndex <= c.expiresAtTurnIndex);
+}
+
+function addShotCluesSimple(attacker, targetRow, targetCol){
+  const forPlayer = (attacker.owner === 1) ? 2 : 1;
+const expiresAt = game.turnIndex + 1; // bleibt bis zum Ende des nächsten Spielerzugs sichtbar
+
+
+  // 🔵 Abschuss – exakt
+  game.clues.push({
+    forPlayer,
+    row: attacker.row,
+    col: attacker.col,
+    kind: "origin_exact",
+    expiresAtTurnIndex: expiresAt,
+
+  });
+
+  // 🔵 Abschuss – zufälliger Nachbar
+  const oRnd = randomNeighbor(attacker.row, attacker.col);
+  game.clues.push({
+    forPlayer,
+    row: oRnd.row,
+    col: oRnd.col,
+    kind: "origin_fuzzy",
+    expiresAtTurnIndex: expiresAt,
+
+  });
+
+  // 🔴 Treffer – exakt
+  game.clues.push({
+    forPlayer,
+    row: targetRow,
+    col: targetCol,
+    kind: "impact_exact",
+    expiresAtTurnIndex: expiresAt,
+
+  });
+
+  // 🔴 Treffer – zufälliger Nachbar
+  const iRnd = randomNeighbor(targetRow, targetCol);
+  game.clues.push({
+    forPlayer,
+    row: iRnd.row,
+    col: iRnd.col,
+    kind: "impact_fuzzy",
+    expiresAtTurnIndex: expiresAt,
+
+  });
+}
+
+
+function hasClueForActiveAt(row, col, kind){
+  const k = keyOf(row,col);
+  return game.clues.some(c =>
+    c.kind === kind &&
+    c.forPlayer === game.activePlayer &&
+    game.turnIndex <= c.expiresAtTurnIndex &&
+    keyOf(c.row,c.col) === k
+  );
+}
+
+
+function randomNeighbor(row, col){
+  const n = neighbors(row, col).filter(p => {
+    if (p.row < 0 || p.row >= rows) return false;
+    const cols = colsInRow(p.row);
+    if (p.col < 0 || p.col >= cols) return false;
+    return true;
+  });
+  if (!n.length) return {row, col};
+  return n[Math.floor(Math.random() * n.length)];
+}
+
+
+  function applyStartOfTurnEffects(player){
+    for (const u of game.units){
+      if (u.owner !== player) continue;
+
+      if (u.statuses.burnAppliesAtRound === game.round && u.statuses.burnDamage > 0){
+        u.hp -= u.statuses.burnDamage;
+        toast(`${u.name}: Brand! -${u.statuses.burnDamage} HP.`, "warn", 1500);
+        u.statuses.burnDamage = 0;
+        u.statuses.burnAppliesAtRound = 0;
+        if (u.hp <= 0){
+          toast(`${u.name}: Durch Brand eliminiert.`, "bad", 1800);
+        }
+      }
+
+      if (u.statuses.dashSelfDamageAppliesAtRound === game.round && u.statuses.dashSelfDamage > 0){
+        u.hp -= u.statuses.dashSelfDamage;
+        toast(`${u.name}: Erschöpfung! -${u.statuses.dashSelfDamage} HP.`, "warn", 1500);
+        u.statuses.dashSelfDamage = 0;
+        u.statuses.dashSelfDamageAppliesAtRound = 0;
+        if (u.hp <= 0){
+          toast(`${u.name}: Durch Erschöpfung eliminiert.`, "bad", 1800);
+        }
+      }
+    }
+    game.units = game.units.filter(u => u.hp > 0);
+  }
+
+  function resetTurnStateForPlayer(player){
+    pruneExpiredBoardEffects();
+    game.missileShieldThisTurn[player] = false;
+
+    for (const u of game.units){
+      if (u.owner !== player) continue;
+
+      const def = UNIT_DEFS[u.type];
+
+      let slowPenalty = 0;
+      if (u.statuses.slowAppliesAtRound === game.round && u.statuses.slowAmount > 0){
+        slowPenalty = u.statuses.slowAmount;
+        u.statuses.slowAmount = 0;
+        u.statuses.slowAppliesAtRound = 0;
+      }
+
+      const penalty = Math.max(0, (u.pendingMovePenalty | 0) + slowPenalty);
+      u.pendingMovePenalty = 0;
+
+      u.moveMax = def.move;
+      u.atkBase = def.atk;
+      u.vision = def.vision;
+      u.range = def.range;
+
+      u.moveLeft = Math.max(0, u.moveMax - penalty);
+
+      u.state.ability = false;
+      u.state.shotsUsed = 0;
+
+      u.atkBuff = 0;
+
+      if (u.statuses.hitBonusExpiresAtRound < game.round){ u.statuses.hitBonus = 0; }
+      if (u.statuses.bonusDamageNextExpiresAtRound < game.round){ u.statuses.bonusDamageNext = 0; }
+      if (u.statuses.bonusVsHeavyExpiresAtRound < game.round){ u.statuses.bonusVsHeavy = 0; u.statuses.bonusVsHeavyHpMax = 0; }
+      if (u.statuses.lifestealExpiresAtRound < game.round){ u.statuses.lifestealHeal = 0; }
+      if (u.statuses.forestDamageBonusExpiresAtRound < game.round){ u.statuses.forestDamageBonus = 0; }
+      if (u.statuses.doubleShotExpiresAtRound < game.round){ u.statuses.doubleShot = false; u.statuses.doubleShotShots = 1; u.statuses.doubleShotDmgMinus = 0; }
+      if (u.statuses.tempShieldExpiresAtRound < game.round){ u.statuses.tempShield = 0; }
+      if (u.statuses.invisibleExpiresAtRound < game.round){ u.statuses.invisible = false; }
+    }
+  }
+
+  function isUnitDimmed(u){
+    if (u.owner !== game.activePlayer) return false;
+    if (game.phase === "move") return (u.moveLeft <= 0);
+    if (game.phase === "ability") return u.state.ability;
+    if (game.phase === "shoot"){
+      const shotsAllowed = shotsAllowedFor(u);
+      return (u.state.shotsUsed >= shotsAllowed);
+    }
+    return false;
+  }
+
+  function shotsAllowedFor(u){
+    if (u.statuses.doubleShot && u.statuses.doubleShotExpiresAtRound >= game.round){
+      return Math.max(1, u.statuses.doubleShotShots | 0);
+    }
+    return 1;
+  }
+
+  function pruneExpiredReveals(){
+    game.reveals = game.reveals.filter(r => game.round <= r.expiresAtRound);
+  }
+
+
+
+
+
+  function computeVisibleFor(player){
+    if ((game.revealAllUntilRoundByPlayer[player] | 0) >= game.round){
+      const all = new Set();
+      for (const c of game.centers) all.add(keyOf(c.row,c.col));
+      return all;
+    }
+
+    const vis = new Set();
+
+    for (const u of game.units){
+      if (u.owner !== player) continue;
+      for (const c of game.centers){
+        const d = hexDistance(u.row, u.col, c.row, c.col);
+if (d <= effVision(u)) vis.add(keyOf(c.row,c.col));
+
+      }
+    }
+
+    for (const r of game.reveals){
+      if (r.owner !== player) continue;
+      vis.add(keyOf(r.row, r.col));
+    }
+
+    return vis;
+  }
+
+  function isExplicitlyRevealedForActive(row, col){
+  const k = keyOf(row,col);
+  return game.reveals.some(r =>
+    r.owner === game.activePlayer &&
+    game.round <= r.expiresAtRound &&
+    keyOf(r.row,r.col) === k
+  );
+}
+
+
+  function isHexVisible(row, col){
+    return game.visible.has(keyOf(row,col));
+  }
+
+  function isEnemyUnitVisibleToActive(enemyUnit){
+    if (enemyUnit.owner === game.activePlayer) return true;
+    if (!isHexVisible(enemyUnit.row, enemyUnit.col)) return false;
+
+    if (enemyUnit.statuses.invisible && enemyUnit.statuses.invisibleExpiresAtRound >= game.round){
+      const spot = Math.max(1, enemyUnit.statuses.invisibleSpotRange | 0);
+      for (const u of game.units){
+        if (u.owner !== game.activePlayer) continue;
+        const d = hexDistance(u.row, u.col, enemyUnit.row, enemyUnit.col);
+        if (d <= spot) return true;
+      }
+      return false;
+    }
+
+    const t = game.terrainAt.get(keyOf(enemyUnit.row, enemyUnit.col)) ?? TERRAIN.LAND;
+if (t !== TERRAIN.FOREST) return true;
+
+// NEU: Wenn das Feld durch Aufklärung explizit aufgedeckt wurde, ist die Einheit sichtbar
+if (isExplicitlyRevealedForActive(enemyUnit.row, enemyUnit.col)){
+  return true;
+}
+
+const SPOT_RANGE = 2;
+for (const u of game.units){
+  if (u.owner !== game.activePlayer) continue;
+  const d = hexDistance(u.row, u.col, enemyUnit.row, enemyUnit.col);
+  if (d <= SPOT_RANGE) return true;
+}
+return false;
+
+  }
+
+  function clearMovePlanning(){
+    game.reachableCost = new Map();
+    game.reachablePrev = new Map();
+  }
+
+  function computeReachableForUnit(unit){
+    clearMovePlanning();
+    if (game.phase !== "move") return;
+    if (!unit) return;
+    if (unit.owner !== game.activePlayer) return;
+    if (unit.moveLeft <= 0) return;
+
+    const startKey = keyOf(unit.row, unit.col);
+    const maxMove = unit.moveLeft;
+
+    const dist = new Map();
+    const prev = new Map();
+    dist.set(startKey, 0);
+
+    const open = [{key: startKey, cost: 0}];
+
+    while (open.length){
+      open.sort((a,b)=>a.cost-b.cost);
+      const cur = open.shift();
+      if (!cur) break;
+
+      const curKey = cur.key;
+      const curCost = cur.cost;
+      if (curCost !== dist.get(curKey)) continue;
+
+      const {row, col} = parseKey(curKey);
+
+      for (const n of neighbors(row, col)){
+        if (!isHexVisible(n.row, n.col)) continue;
+
+        if (isHexBlocked(n.row, n.col)) continue;
+
+        const occ = unitAt(n.row, n.col);
+        if (occ && !(n.row === unit.row && n.col === unit.col)) continue;
+
+        const t = game.terrainAt.get(keyOf(n.row, n.col)) ?? TERRAIN.LAND;
+        if (!isPassable(t)) continue;
+
+        const baseStep = terrainCost(t);
+        const factor = movementZoneFactorFor(n.row, n.col, unit.owner);
+        const step = baseStep * factor;
+
+        const nextCost = curCost + step;
+        if (nextCost > maxMove) continue;
+
+        const nk = keyOf(n.row, n.col);
+        const old = dist.get(nk);
+        if (old === undefined || nextCost < old){
+          dist.set(nk, nextCost);
+          prev.set(nk, curKey);
+          open.push({key: nk, cost: nextCost});
+        }
+      }
+    }
+
+    dist.delete(startKey);
+    game.reachableCost = dist;
+    game.reachablePrev = prev;
+  }
+
+  function executeMoveTo(row, col){
+    const selected = game.units.find(u => u.id === game.selectedUnitId);
+    if (!selected){
+      toast("Bewegen: Keine Einheit ausgewählt.", "bad");
+      return;
+    }
+    if (game.phase !== "move"){
+      toast("Bewegen: Nicht in Move-Phase.", "bad");
+      return;
+    }
+    if (selected.owner !== game.activePlayer) return;
+
+    if (selected.moveLeft <= 0){
+      toast(`${selected.name}: Nicht genügend MP.`, "bad");
+      return;
+    }
+
+    
+
+
+
+    if (isHexBlocked(row,col)){
+      toast("Bewegen: Ziel ist blockiert.", "bad");
+      return;
+    }
+
+    computeReachableForUnit(selected);
+
+    const tk = keyOf(row,col);
+    const cost = game.reachableCost.get(tk);
+
+    if (cost === undefined){
+      toast(`${selected.name}: Ziel nicht erreichbar (MP/Blockade).`, "bad");
+      return;
+    }
+
+    selected.row = row;
+    selected.col = col;
+    selected.moveLeft -= cost;
+
+    toast(`${selected.name}: Bewegt (Kosten ${cost}). MP übrig: ${selected.moveLeft}.`, "ok");
+
+    clearMovePlanning();
+    if (selected.moveLeft > 0) computeReachableForUnit(selected);
+
+    game.visible = computeVisibleFor(game.activePlayer);
+  }
+
+  function clearAbilityMode(){
+    game.abilityMode = null;
+    game.abilitySourceUnitId = null;
+    game.abilityKind = null;
+    game.abilityPayload = null;
+  }
+
+  function abilityPreviewText(unit){
+    const def = UNIT_DEFS[unit.type];
+    if (!def || !def.ability){
+      return "Diese Einheit hat keine definierte Fähigkeit.";
+    }
+    const a = def.ability;
+    return `${a.title}\n\n${a.text}\n\nPenalty: -${def.movePenaltyNext} MP in der nächsten Runde.\n\nJetzt auslösen?`;
+  }
+
+  function requireTargetForAbility(kind){
+    return [
+      "target_reveal_single",
+      "target_reveal_area",
+      "target_block_hex",
+      "target_aoe_damage",
+      "target_danger_zone",
+      "target_give_shield_ally",
+    ].includes(kind);
+  }
+
+  async function tryUseAbility(unit){
+    if (game.phase !== "ability"){
+      toast("Fähigkeit: Nicht in Ability-Phase.", "bad");
+      return;
+    }
+    if (unit.owner !== game.activePlayer) return;
+    if (unit.state.ability){
+      toast(`${unit.name}: Fähigkeit bereits genutzt.`, "bad");
+      return;
+    }
+
+    const def = UNIT_DEFS[unit.type];
+    if (!def || !def.ability){
+      toast(`${unit.name}: Keine Fähigkeit definiert.`, "bad");
+      return;
+    }
+
+    const ok = await openModal({
+      title: `Fähigkeit auslösen: ${unit.name}`,
+      text: abilityPreviewText(unit),
+      yesText: "Ja, auslösen",
+      noText: "Nein"
+    });
+    if (!ok){
+      toast(`${unit.name}: Abgebrochen.`, "warn");
+      return;
+    }
+
+    unit.pendingMovePenalty += (def.movePenaltyNext | 0);
+
+    const a = def.ability;
+
+    if (requireTargetForAbility(a.kind)){
+      game.abilityMode = "target";
+      game.abilitySourceUnitId = unit.id;
+      game.abilityKind = a.kind;
+      game.abilityPayload = a.params ?? {};
+      unit.state.ability = true;
+
+      toast(`${unit.name}: Ziel wählen (${a.title}).`, "warn", 1500);
+      applyHUD();
+      render();
+      return;
+    }
+
+    applyAbilityImmediate(unit, a.kind, a.params ?? {});
+    unit.state.ability = true;
+    toast(`${unit.name}: Fähigkeit ausgelöst (${a.title}).`, "ok", 1500);
+  }
+
+  function applyAbilityImmediate(unit, kind, params){
+    if (kind === "self_buff_atk"){
+      unit.atkBuff += (params.atkPlus | 0);
+      return;
+    }
+    if (kind === "self_heal"){
+      const plus = params.hpPlus | 0;
+      const before = unit.hp;
+      unit.hp = Math.min(unit.hpMax, unit.hp + plus);
+      toast(`${unit.name}: HP ${before}→${unit.hp}.`, "ok", 1400);
+      return;
+    }
+    if (kind === "self_hit_bonus"){
+      unit.statuses.hitBonus = Number(params.hitBonus ?? 0);
+      unit.statuses.hitBonusExpiresAtRound = game.round;
+      return;
+    }
+    if (kind === "self_bonus_damage_next"){
+      unit.statuses.bonusDamageNext = (params.bonus | 0);
+      unit.statuses.bonusDamageNextExpiresAtRound = game.round;
+      return;
+    }
+    if (kind === "self_bonus_vs_heavy"){
+      unit.statuses.bonusVsHeavy = (params.bonus | 0);
+      unit.statuses.bonusVsHeavyHpMax = (params.heavyHpMax | 0);
+      unit.statuses.bonusVsHeavyExpiresAtRound = game.round;
+      return;
+    }
+    if (kind === "self_temp_shield"){
+      unit.statuses.tempShield = (params.shield | 0);
+      unit.statuses.tempShieldExpiresAtRound = game.round + ((params.rounds|0) - 1);
+      return;
+    }
+    if (kind === "self_apply_burn"){
+      unit.statuses._applyBurnOnHit = true;
+      unit.statuses._burnDamage = (params.burnDamage|0);
+      unit.statuses._burnRounds = (params.burnRounds|0);
+      unit.statuses._applyBurnExpiresAtRound = game.round;
+      return;
+    }
+    if (kind === "self_apply_slow"){
+      unit.statuses._applySlowOnHit = true;
+      unit.statuses._slowAmount = (params.slowAmount|0);
+      unit.statuses._slowRounds = (params.slowRounds|0);
+      unit.statuses._applySlowExpiresAtRound = game.round;
+      return;
+    }
+    if (kind === "self_lifesteal_next"){
+      unit.statuses.lifestealHeal = (params.heal|0);
+      unit.statuses.lifestealExpiresAtRound = game.round;
+      return;
+    }
+    if (kind === "self_forest_damage_bonus_next"){
+      unit.statuses.forestDamageBonus = (params.bonus|0);
+      unit.statuses.forestDamageBonusExpiresAtRound = game.round;
+      return;
+    }
+    if (kind === "self_invisible"){
+      unit.statuses.invisible = true;
+      unit.statuses.invisibleSpotRange = (params.spotRange|0) || 1;
+      unit.statuses.invisibleExpiresAtRound = game.round + ((params.rounds|0) - 1);
+      return;
+    }
+    if (kind === "global_reveal_all"){
+      const rounds = (params.rounds|0) || 1;
+      game.revealAllUntilRoundByPlayer[unit.owner] =
+        Math.max(game.revealAllUntilRoundByPlayer[unit.owner] | 0, game.round + (rounds - 1));
+      return;
+    }
+    if (kind === "self_double_shot"){
+      unit.statuses.doubleShot = true;
+      unit.statuses.doubleShotShots = (params.shots|0) || 2;
+      unit.statuses.doubleShotDmgMinus = (params.dmgMinusPerShot|0) || 0;
+      unit.statuses.doubleShotExpiresAtRound = game.round;
+      return;
+    }
+    if (kind === "team_missile_shield"){
+      game.missileShieldThisTurn[unit.owner] = true;
+      return;
+    }
+    if (kind === "self_dash_with_cost"){
+      const mpPlus = (params.mpPlus|0) || 0;
+      unit.moveLeft += mpPlus;
+      toast(`${unit.name}: +${mpPlus} MP (sofort).`, "ok", 1400);
+      const selfDmg = (params.selfDamageEndTurn|0) || 0;
+      if (selfDmg > 0){
+        unit.statuses.dashSelfDamage = selfDmg;
+        unit.statuses.dashSelfDamageAppliesAtRound = game.round + 1;
+      }
+      return;
+    }
+  }
+
+  function commitTargetAbility(row, col){
+    const unit = game.units.find(u => u.id === game.abilitySourceUnitId);
+    if (!unit){
+      clearAbilityMode();
+      toast("Fähigkeit: Quelle nicht gefunden.", "bad");
+      return;
+    }
+    if (unit.owner !== game.activePlayer){
+      clearAbilityMode();
+      toast("Fähigkeit: Falscher Spieler.", "bad");
+      return;
+    }
+
+    const kind = game.abilityKind;
+const p = game.abilityPayload ?? {};
+
+const allowFog = abilityMayTargetFog(kind);
+
+if (!allowFog && !isHexVisible(row,col)){
+  toast("Fähigkeit: Ziel im Fog nicht erlaubt.", "bad");
+  return;
+}
+
+
+    if (kind === "target_reveal_single"){
+      const rounds = (p.revealRounds|0) || 2;
+      const expiresAt = game.round + (rounds - 1);
+      game.reveals.push({ owner: unit.owner, row, col, expiresAtRound: expiresAt });
+      toast(`${unit.name}: Feld aufgedeckt (${rounds} Runden).`, "ok", 1700);
+    }
+
+    if (kind === "target_reveal_area"){
+      const rounds = (p.revealRounds|0) || 2;
+      const expiresAt = game.round + (rounds - 1);
+      const targets = [{row,col}, ...neighbors(row,col)];
+      for (const t of targets){
+        game.reveals.push({ owner: unit.owner, row: t.row, col: t.col, expiresAtRound: expiresAt });
+      }
+      toast(`${unit.name}: Gebiet aufgedeckt (${rounds} Runden).`, "ok", 1700);
+    }
+
+    if (kind === "target_block_hex"){
+      const rounds = (p.blockRounds|0) || 1;
+      const expiresAt = game.round + (rounds - 1);
+      game.blockedHexes.push({ owner: unit.owner, row, col, expiresAtRound: expiresAt });
+      toast(`${unit.name}: Feld blockiert (${rounds} Runde).`, "ok", 1700);
+    }
+
+    if (kind === "target_danger_zone"){
+      const rounds = (p.rounds|0) || 1;
+      const factor = Number(p.factor ?? 2);
+      const expiresAt = game.round + (rounds - 1);
+      game.dangerZones.push({ owner: unit.owner, row, col, factor, expiresAtRound: expiresAt });
+      toast(`${unit.name}: Zone gesetzt (${rounds} Runde, Kosten ×${factor}).`, "ok", 1700);
+    }
+
+    if (kind === "target_give_shield_ally"){
+      const ally = unitAt(row,col);
+      if (!ally || ally.owner !== unit.owner){
+        toast("Ziel muss ein Verbündeter sein.", "bad");
+        clearAbilityMode();
+        return;
+      }
+      const shield = (p.shield|0) || 1;
+      const rounds = (p.rounds|0) || 2;
+      ally.statuses.tempShield = shield;
+      ally.statuses.tempShieldExpiresAtRound = game.round + (rounds - 1);
+      toast(`${unit.name}: Schild auf ${ally.name} (${rounds} Runden).`, "ok", 1700);
+    }
+
+    if (kind === "target_aoe_damage"){
+      const dmg = (p.damage|0) || 1;
+      const chance = Number(p.hitChance ?? 0.70);
+
+      const tiles = [{row,col}, ...neighbors(row,col)];
+      let hits = 0;
+      for (const t of tiles){
+        const target = unitAt(t.row, t.col);
+        if (!target) continue;
+        if (target.owner === unit.owner) continue;
+
+        const hit = (Math.random() <= chance);
+        if (!hit) continue;
+
+        applyDamage(unit, target, dmg, { isAbility:true, isMissile: (unit.tags||[]).includes("missile") });
+        hits++;
+      }
+      toast(`${unit.name}: Flächeneffekt ausgeführt (Treffer: ${hits}).`, "warn", 1700);
+    }
+
+    clearAbilityMode();
+    pruneExpiredReveals();
+    game.visible = computeVisibleFor(game.activePlayer);
+    applyHUD();
+    render();
+  }
+
+  function hitChance(attacker, dist){
+    const base = UNIT_DEFS[attacker.type].hitBase ?? 0.6;
+    const penalty = Math.max(0, (dist - 1)) * 0.07;
+    const bonus = (attacker.statuses.hitBonusExpiresAtRound >= game.round) ? (attacker.statuses.hitBonus || 0) : 0;
+    return Math.max(0.12, Math.min(0.92, base - penalty + bonus));
+  }
+
+  function isHeavyTarget(target, hpMaxThreshold){
+    return (target.hpMax | 0) >= (hpMaxThreshold | 0);
+  }
+
+  function computeShotDamage(attacker, target, dist){
+    let dmg = Math.max(0, (attacker.atkBase | 0) + (attacker.atkBuff | 0));
+
+    if (attacker.statuses.doubleShot && attacker.statuses.doubleShotExpiresAtRound >= game.round){
+      dmg = Math.max(0, dmg - (attacker.statuses.doubleShotDmgMinus | 0));
+    }
+
+    if (attacker.statuses.bonusDamageNextExpiresAtRound >= game.round && (attacker.statuses.bonusDamageNext | 0) > 0){
+      dmg += (attacker.statuses.bonusDamageNext | 0);
+      attacker.statuses.bonusDamageNext = 0;
+      attacker.statuses.bonusDamageNextExpiresAtRound = 0;
+    }
+
+    if (attacker.statuses.bonusVsHeavyExpiresAtRound >= game.round && (attacker.statuses.bonusVsHeavy | 0) > 0){
+      if (isHeavyTarget(target, attacker.statuses.bonusVsHeavyHpMax | 0)){
+        dmg += (attacker.statuses.bonusVsHeavy | 0);
+      }
+      attacker.statuses.bonusVsHeavy = 0;
+      attacker.statuses.bonusVsHeavyHpMax = 0;
+      attacker.statuses.bonusVsHeavyExpiresAtRound = 0;
+    }
+
+    if (attacker.statuses.forestDamageBonusExpiresAtRound >= game.round && (attacker.statuses.forestDamageBonus | 0) > 0){
+      const at = game.terrainAt.get(keyOf(attacker.row, attacker.col)) ?? TERRAIN.LAND;
+      if (at === TERRAIN.FOREST){
+        dmg += (attacker.statuses.forestDamageBonus | 0);
+      }
+      attacker.statuses.forestDamageBonus = 0;
+      attacker.statuses.forestDamageBonusExpiresAtRound = 0;
+    }
+
+    return dmg;
+  }
+
+  function consumeMissileShieldIfAny(victimPlayer){
+    if (game.missileShieldThisTurn[victimPlayer]){
+      game.missileShieldThisTurn[victimPlayer] = false;
+      return true;
+    }
+    return false;
+  }
+
+  function applyDamage(attacker, target, rawDamage, opts = {}){
+    let dmg = Math.max(0, rawDamage | 0);
+
+    const isMissile = !!opts.isMissile;
+
+    if (isMissile){
+      const blocked = consumeMissileShieldIfAny(target.owner);
+      if (blocked){
+        toast(`Abfangsystem: Raketen-Treffer negiert!`, "ok", 1600);
+        return;
+      }
+    }
+
+    if (target.statuses.tempShieldExpiresAtRound >= game.round && (target.statuses.tempShield | 0) > 0){
+      const absorbed = Math.min(target.statuses.tempShield | 0, dmg);
+      target.statuses.tempShield -= absorbed;
+      dmg -= absorbed;
+      toast(`${target.name}: Schild absorbiert ${absorbed}.`, "ok", 1200);
+      if (dmg <= 0) return;
+    }
+
+    target.hp -= dmg;
+
+    if (attacker.statuses.lifestealExpiresAtRound >= game.round && (attacker.statuses.lifestealHeal | 0) > 0){
+      const before = attacker.hp;
+      attacker.hp = Math.min(attacker.hpMax, attacker.hp + (attacker.statuses.lifestealHeal | 0));
+      toast(`${attacker.name}: Lebensentzug +${attacker.statuses.lifestealHeal} (HP ${before}→${attacker.hp}).`, "ok", 1500);
+      attacker.statuses.lifestealHeal = 0;
+      attacker.statuses.lifestealExpiresAtRound = 0;
+    }
+
+    if (attacker.statuses._applyBurnOnHit && attacker.statuses._applyBurnExpiresAtRound === game.round){
+      const burnDmg = attacker.statuses._burnDamage | 0;
+      if (burnDmg > 0){
+        target.statuses.burnDamage = burnDmg;
+        target.statuses.burnAppliesAtRound = (target.owner === game.activePlayer) ? (game.round + 1) : (game.round);
+        toast(`${target.name}: Brennt! (nächste Runde -${burnDmg} HP)`, "warn", 1500);
+      }
+      attacker.statuses._applyBurnOnHit = false;
+      attacker.statuses._burnDamage = 0;
+      attacker.statuses._burnRounds = 0;
+      attacker.statuses._applyBurnExpiresAtRound = 0;
+    }
+
+    if (attacker.statuses._applySlowOnHit && attacker.statuses._applySlowExpiresAtRound === game.round){
+      const slow = attacker.statuses._slowAmount | 0;
+      if (slow > 0){
+        target.statuses.slowAmount = slow;
+        target.statuses.slowAppliesAtRound = (target.owner === game.activePlayer) ? (game.round + 1) : (game.round);
+        toast(`${target.name}: Verlangsamt! (nächste Runde -${slow} MP)`, "warn", 1500);
+      }
+      attacker.statuses._applySlowOnHit = false;
+      attacker.statuses._slowAmount = 0;
+      attacker.statuses._slowRounds = 0;
+      attacker.statuses._applySlowExpiresAtRound = 0;
+    }
+
+    if (target.hp <= 0){
+      toast(`${attacker.name}: Treffer! ${target.name} eliminiert.`, "ok", 1900);
+      game.units = game.units.filter(u => u.id !== target.id);
+      if (game.selectedUnitId === target.id) game.selectedUnitId = null;
+    }
+  }
+
+function tryShootAtHex(attacker, row, col){
+  if (game.phase !== "shoot") return;
+  if (attacker.owner !== game.activePlayer) return;
+
+  const shotsAllowed = shotsAllowedFor(attacker);
+  if (attacker.state.shotsUsed >= shotsAllowed){
+    toast(`${attacker.name}: Bereits geschossen.`, "bad");
+    return;
+  }
+
+  const dist = hexDistance(attacker.row, attacker.col, row, col);
+  const rEff = effRange(attacker);
+
+  if (dist > rEff){
+    toast(`${attacker.name}: Ziel außer Reichweite.`, "bad");
+    return;
+  }
+
+  // ===== Ab hier zählt es als "Schuss abgegeben" =====
+  attacker.state.shotsUsed += 1;
+
+  // NEU: Hinweise setzen (blau = Abschuss, rot = Ziel)
+  addShotCluesSimple(attacker, row, col);
+
+  const target = unitAt(row,col);
+
+  if (!target){
+    toast(`${attacker.name}: Blindschuss – nichts getroffen.`, "warn");
+    return;
+  }
+
+  if (target.owner === game.activePlayer){
+    toast("Schuss abgebrochen: eigenes Ziel.", "bad");
+    return;
+  }
+
+  const chance = hitChance(attacker, dist);
+  const hit = (Math.random() <= chance);
+
+  if (!hit){
+    toast(`${attacker.name}: Fehlschuss.`, "warn");
+    return;
+  }
+
+  const dmg = computeShotDamage(attacker, target, dist);
+  const isMissile = (attacker.tags || []).includes("missile");
+  applyDamage(attacker, target, dmg, { isMissile });
+
+  game.visible = computeVisibleFor(game.activePlayer);
+}
+
+
+  function nextPhase(){
+    clearAbilityMode();
+    clearMovePlanning();
+    game.selectedUnitId = null;
+
+    const idx = PHASES.indexOf(game.phase);
+    if (idx < 0) return;
+
+    if (idx === PHASES.length - 1){
+      endTurn();
+      return;
+    }
+
+    game.phase = PHASES[idx + 1];
+    toast(`Phase: ${phaseName(game.phase)}`, "warn", 1100);
+    applyHUD();
+    render();
+  }
+
+  function endTurn(){
+    clearAbilityMode();
+    clearMovePlanning();
+    game.selectedUnitId = null;
+
+    const nextPlayer = (game.activePlayer === 1) ? 2 : 1;
+    showPrivacyForNextPlayer(nextPlayer);
+    applyHUD();
+  }
+
+  function readyNext(){
+    clearAbilityMode();
+    clearMovePlanning();
+
+    game.activePlayer = (game.activePlayer === 1) ? 2 : 1;
+    if (game.activePlayer === 1) game.round += 1;
+    game.turnIndex += 1;
+
+
+    game.phase = "move";
+    game.selectedUnitId = null;
+
+    pruneExpiredReveals();
+    pruneExpiredClues();
+
+    applyStartOfTurnEffects(game.activePlayer);
+    resetTurnStateForPlayer(game.activePlayer);
+
+    setLocked(false);
+    toast(`Spieler ${game.activePlayer}: Runde ${game.round} (Move)`, "warn", 1400);
+    applyHUD();
+    render();
+  }
+
+  function buildOverlaySetForSelected(){
+  const selected = game.units.find(u => u.id === game.selectedUnitId);
+  if (!selected) return { visionSet: new Set(), shootSet: new Set(), targetSet: new Set() };
+
+  const visionSet = new Set();
+  const shootSet  = new Set();
+  const targetSet = new Set();
+
+  // Nur für eigene Einheit sinnvoll anzeigen
+  if (selected.owner === game.activePlayer){
+    const vEff = effVision(selected);
+    const rEff = effRange(selected);
+
+    // Sicht (weiß) immer anzeigen
+    for (const c of game.centers){
+      const k = keyOf(c.row,c.col);
+      if (!game.visible.has(k)) continue;
+      const d = hexDistance(selected.row, selected.col, c.row, c.col);
+      if (d <= vEff) visionSet.add(k);
+    }
+
+    // Schussrange (rot) immer anzeigen
+    for (const c of game.centers){
+      const k = keyOf(c.row,c.col);
+      if (!game.visible.has(k)) continue;
+      const d = hexDistance(selected.row, selected.col, c.row, c.col);
+      if (d <= rEff) shootSet.add(k);
+    }
+  }
+
+  // Ability-Ziel-Overlay wie bisher
+  if (game.phase === "ability" && game.abilityMode === "target" && selected.id === game.abilitySourceUnitId){
+  const allowFog = abilityMayTargetFog(game.abilityKind);
+
+  for (const c of game.centers){
+    const k = keyOf(c.row,c.col);
+    if (allowFog || game.visible.has(k)){
+      targetSet.add(k);
+    }
+  }
+}
+
+
+  return { visionSet, shootSet, targetSet };
+}
+
+
+  function unitPosText(u){
+    return `HP ${u.hp}/${u.hpMax} · MP ${u.moveLeft}/${u.moveMax} · Sicht ${u.vision} · Range ${u.range} · Pos ${u.row},${u.col}`;
+  }
+
+  function unitShortLetter(u){
+    const t = u.type;
+    if (t === "tank") return "P";
+    if (t === "soldier") return "S";
+    if (t === "scout") return "SP";
+    if (t === "ritter") return "R";
+    if (t === "schildtraeger") return "ST";
+    if (t === "bogenschuetze") return "B";
+    if (t === "armbrustschuetze") return "A";
+    if (t === "pikenier") return "PI";
+    if (t === "katapult") return "K";
+    if (t === "zauberer") return "Z";
+    if (t === "feuermagier") return "F";
+    if (t === "eismagier") return "E";
+    if (t === "nekromant") return "N";
+    if (t === "paladin") return "PL";
+    if (t === "waldlaeufer") return "W";
+    if (t === "beschwoerer") return "BS";
+    if (t === "ninja") return "NJ";
+    if (t === "schattenninja") return "SN";
+    if (t === "samurai") return "SA";
+    if (t === "ronin") return "RO";
+    if (t === "shinobispaher") return "SS";
+    if (t === "anime_schuetze") return "AS";
+    if (t === "raketeninfanterist") return "RI";
+    if (t === "raketenpanzer") return "RP";
+    if (t === "raketenabwehrer") return "RA";
+    return "?";
+  }
+
+  function renderUnitOverview(){
+    unitOverviewSub.textContent = (app.screen === "game")
+      ? `Aktueller Spieler: ${game.activePlayer} · Phase: ${phaseName(game.phase)} · Modus: ${app.mode} · Map: ${app.map?.id ?? "-"}`
+      : (app.screen === "builder")
+        ? `Team Builder: Spieler ${app.builderPlayer} · Modus: ${app.mode} · Offline`
+        : `Menü: Modus wählen · Offline`;
+
+    const p1 = game.units.filter(u => u.owner === 1);
+    const p2All = game.units.filter(u => u.owner === 2);
+
+    const p2 = (app.screen === "game" && game.activePlayer === 1)
+      ? p2All.filter(u => isEnemyUnitVisibleToActive(u))
+      : p2All;
+
+    const p1Shown = (app.screen === "game" && game.activePlayer === 2)
+      ? p1.filter(u => isEnemyUnitVisibleToActive(u))
+      : p1;
+
+    p1Count.textContent = `${p1Shown.length}/${p1.length}`;
+    p2Count.textContent = `${p2.length}/${p2All.length}`;
+
+    p1List.innerHTML = "";
+    p2List.innerHTML = "";
+
+    const makeCard = (u) => {
+      const div = document.createElement("div");
+      div.className = "unitCard";
+
+      const left = document.createElement("div");
+      left.className = "unitLeft";
+
+      const t = document.createElement("div");
+      t.className = "unitType";
+      t.textContent = `${u.name} — ${u.role}`;
+
+      const meta = document.createElement("div");
+      meta.className = "unitMeta";
+      const abilityInfo = abilityInlineForCard(u.type);
+meta.textContent = `${unitPosText(u)}\n${abilityTextForUI(u.type)}`;
+meta.style.whiteSpace = "pre-wrap";
+
+
+
+      left.appendChild(t);
+      left.appendChild(meta);
+
+      const right = document.createElement("div");
+      right.className = "unitHp";
+
+      const hpL = document.createElement("div");
+      hpL.className = "hpLabel";
+      hpL.textContent = "HP";
+
+      const hpV = document.createElement("div");
+      hpV.className = "hpVal";
+      hpV.textContent = `${u.hp}`;
+
+      right.appendChild(hpL);
+      right.appendChild(hpV);
+
+      div.appendChild(left);
+      div.appendChild(right);
+
+      div.style.cursor = "pointer";
+      div.addEventListener("click", async () => {
+        if (app.screen !== "game") return;
+
+        if (u.owner !== game.activePlayer) {
+          toast("Nur eigene Einheiten auswählen.", "bad");
+          return;
+        }
+
+        game.selectedUnitId = u.id;
+
+        if (game.phase === "ability"){
+          await tryUseAbility(u);
+        }
+
+        render();
+      });
+
+      return div;
+    };
+
+    for (const u of p1Shown) p1List.appendChild(makeCard(u));
+    for (const u of p2) p2List.appendChild(makeCard(u));
+  }
+
+  // INPUT
+  function onTileClick(row,col){
+    if (app.screen !== "game") return;
+    if (game.locked || game.modalOpen) return;
+
+    if (game.phase === "ability" && game.abilityMode === "target"){
+      commitTargetAbility(row, col);
+      return;
+    }
+
+    if (game.phase === "move"){
+      if (!isHexVisible(row,col)){
+        toast("Bewegen: Ziel im Fog (nicht erlaubt).", "bad");
+        return;
+      }
+      executeMoveTo(row,col);
+      render();
+      return;
+    }
+
+    if (game.phase === "shoot"){
+      const attacker = game.units.find(u => u.id === game.selectedUnitId);
+      if (!attacker || attacker.owner !== game.activePlayer){
+        toast("Schießen: zuerst Angreifer wählen.", "bad");
+        return;
+      }
+      tryShootAtHex(attacker, row, col);
+      render();
+      return;
+    }
+  }
+
+  async function onUnitClick(unit){
+    if (app.screen !== "game") return;
+    if (game.locked || game.modalOpen) return;
+
+    if (game.phase === "shoot"){
+      const attacker = game.units.find(u => u.id === game.selectedUnitId);
+
+      if (unit.owner === game.activePlayer){
+        game.selectedUnitId = unit.id;
+        toast(`Angreifer: ${unit.name} gewählt.`, "warn", 1100);
+        render();
+        return;
+      }
+
+      if (!attacker || attacker.owner !== game.activePlayer){
+        toast("Schießen: zuerst Angreifer wählen.", "bad");
+        return;
+      }
+
+      tryShootAtHex(attacker, unit.row, unit.col);
+      render();
+      return;
+    }
+
+    if (game.phase === "ability"){
+      if (unit.owner !== game.activePlayer) return;
+      game.selectedUnitId = unit.id;
+      await tryUseAbility(unit);
+      render();
+      return;
+    }
+
+    if (game.phase === "move"){
+      if (unit.owner !== game.activePlayer) return;
+      game.selectedUnitId = unit.id;
+
+      if (unit.moveLeft <= 0){
+        toast(`${unit.name}: Keine MP mehr.`, "bad");
+      } else {
+        toast(`Ausgewählt: ${unit.name} (MP ${unit.moveLeft}, HP ${unit.hp}).`, "warn", 1200);
+      }
+      render();
+      return;
+    }
+  }
+
+  function clearSvg(){ while (svg.firstChild) svg.removeChild(svg.firstChild); }
+
+  function render(){
+    if (app.screen !== "game") return;
+
+    game.visible = computeVisibleFor(game.activePlayer);
+
+    clearSvg();
+
+    const worldW = game.world.w;
+    const worldH = game.world.h;
+
+    svg.setAttribute("viewBox", `0 0 ${worldW} ${worldH}`);
+    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+
+    const imgEl = document.createElementNS("http://www.w3.org/2000/svg", "image");
+    imgEl.setAttribute("href", MAP_IMAGE);
+    imgEl.setAttribute("x", "0");
+    imgEl.setAttribute("y", "0");
+    imgEl.setAttribute("width", worldW);
+    imgEl.setAttribute("height", worldH);
+    imgEl.setAttribute("preserveAspectRatio", "xMidYMid slice");
+    imgEl.setAttribute("class", "mapImage");
+    svg.appendChild(imgEl);
+
+    const gGrid = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    svg.appendChild(gGrid);
+
+    const pts = hexPoints(game.world.r);
+    const { visionSet, shootSet, targetSet } = buildOverlaySetForSelected();
+
+
+    for (const c of game.centers){
+      const tile = document.createElementNS("http://www.w3.org/2000/svg","g");
+      tile.setAttribute("class","tile");
+      tile.setAttribute("tabindex","0");
+      tile.setAttribute("transform", `translate(${c.cx},${c.cy})`);
+
+      const terrain = game.terrainAt.get(keyOf(c.row,c.col)) ?? TERRAIN.LAND;
+      tile.classList.add(`tile--${terrain}`);
+
+      const vis = isHexVisible(c.row, c.col);
+      if (!vis && !isRevealTargeting()){
+  tile.classList.add("tile--fog");
+}
+
+
+      const poly = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+      poly.setAttribute("class","hex");
+      poly.setAttribute("points", pts);
+      tile.appendChild(poly);
+
+      // Soft-Fog während Reveal-Targeting (nur visuell)
+if (!vis && isRevealTargeting()){
+  const fog = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+  fog.setAttribute("points", pts);
+  fog.setAttribute("fill", "rgba(255,255,255,0.55)");
+  fog.setAttribute("stroke", "rgba(203,213,225,0.35)");
+  fog.setAttribute("stroke-width", "1");
+  tile.appendChild(fog);
+}
+
+      const k = keyOf(c.row,c.col);
+
+      if (visionSet.has(k)){
+        const vp = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+        vp.setAttribute("class","visionPoly");
+        vp.setAttribute("points", pts);
+        tile.appendChild(vp);
+      }
+
+      if (shootSet.has(k)){
+  const sp = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+  sp.setAttribute("class","shootPoly");
+  sp.setAttribute("points", pts);
+  tile.appendChild(sp);
+}
+
+
+      if (targetSet.has(k)){
+        const tp = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+        tp.setAttribute("class","targetPoly");
+        tp.setAttribute("points", pts);
+        tile.appendChild(tp);
+      }
+
+      if (isHexBlocked(c.row, c.col) && vis){
+        const bp = document.createElementNS("http://www.w3.org/2000/svg","polygon");
+        bp.setAttribute("class","targetPoly");
+        bp.setAttribute("points", pts);
+        tile.appendChild(bp);
+      }
+
+      // === "!" Hinweis aus Wald-Schuss anzeigen (nur wenn das Feld sichtbar ist) ===
+// === "!" Hinweis aus Wald-Schuss anzeigen (auch im Fog, im Fog schwächer) ===
+// === Shot-Hinweise ===
+const oExact = hasClueForActiveAt(c.row, c.col, "origin_exact");
+const oFuzzy = hasClueForActiveAt(c.row, c.col, "origin_fuzzy");
+const iExact = hasClueForActiveAt(c.row, c.col, "impact_exact");
+const iFuzzy = hasClueForActiveAt(c.row, c.col, "impact_fuzzy");
+
+// 🔵 Abschuss (blau)
+if (oExact || oFuzzy){
+  const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+  t.setAttribute("x","0");
+  t.setAttribute("y", (game.world.r * 0.26).toFixed(2));
+  t.setAttribute("text-anchor","middle");
+  t.setAttribute("font-size", (game.world.r * 0.30).toFixed(2));
+  t.setAttribute("font-weight","900");
+  t.setAttribute(
+    "fill",
+    oExact
+      ? "rgba(37,99,235,0.95)"   // exakt: stark
+      : "rgba(37,99,235,0.35)"   // fuzzy: schwach
+  );
+  t.textContent = "!";
+  tile.appendChild(t);
+}
+
+// 🔴 Treffer (rot)
+if (iExact || iFuzzy){
+  const t2 = document.createElementNS("http://www.w3.org/2000/svg","text");
+  t2.setAttribute("x","0");
+  t2.setAttribute("y", (-(game.world.r * 0.10)).toFixed(2));
+  t2.setAttribute("text-anchor","middle");
+  t2.setAttribute("font-size", (game.world.r * 0.34).toFixed(2));
+  t2.setAttribute("font-weight","900");
+  t2.setAttribute(
+    "fill",
+    iExact
+      ? "rgba(220,38,38,0.95)"   // exakt: stark
+      : "rgba(220,38,38,0.35)"   // fuzzy: schwach
+  );
+  t2.textContent = "!";
+  tile.appendChild(t2);
+}
+
+
+
+
+      tile.addEventListener("click", () => onTileClick(c.row, c.col));
+      gGrid.appendChild(tile);
+    }
+
+    const gUnits = document.createElementNS("http://www.w3.org/2000/svg","g");
+    svg.appendChild(gUnits);
+
+    for (const u of game.units){
+      const isEnemy = (u.owner !== game.activePlayer);
+      if (isEnemy && !isEnemyUnitVisibleToActive(u)) continue;
+
+      const center = game.centerByKey.get(keyOf(u.row,u.col));
+      if (!center) continue;
+
+      const ug = document.createElementNS("http://www.w3.org/2000/svg","g");
+      ug.setAttribute("class","unitG");
+      ug.setAttribute("transform", `translate(${center.cx},${center.cy})`);
+
+      if (isUnitDimmed(u)) ug.classList.add("isDimmed");
+      ug.style.cursor = (!game.locked) ? "pointer" : "default";
+
+      const dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
+      dot.setAttribute("class", `unitDot ${u.owner === 1 ? "unit--p1":"unit--p2"}`);
+      dot.setAttribute("cx","0");
+      dot.setAttribute("cy","0");
+      dot.setAttribute("r", (game.world.r * 0.22).toFixed(2));
+      ug.appendChild(dot);
+
+      if (game.selectedUnitId === u.id){
+        const ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
+        ring.setAttribute("class","selectedRing");
+        ring.setAttribute("cx","0");
+        ring.setAttribute("cy","0");
+        ring.setAttribute("r", (game.world.r * 0.27).toFixed(2));
+        ug.appendChild(ring);
+      }
+
+      const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+      label.setAttribute("class","unitLabel");
+      label.setAttribute("x","0");
+      label.setAttribute("y","4");
+      label.textContent = unitShortLetter(u);
+      ug.appendChild(label);
+
+      ug.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onUnitClick(u);
+      });
+
+      gUnits.appendChild(ug);
+    }
+
+    applyHUD();
+    renderUnitOverview();
+  }
+
+  async function buildOnce(){
+    const worldW = 1000;
+    const padX = 40, padTop = 30, padBottom = 30;
+
+    const widestCols = baseCols + 1;
+    const r = (worldW - 2 * padX) / (Math.sqrt(3) * (widestCols + 0.25));
+    const dx = Math.sqrt(3) * r;
+    const dy = 1.5 * r;
+    const offsetX = dx / 2;
+
+    const localCenters = [];
+    for (let row=0; row<rows; row++){
+      const cols = colsInRow(row);
+      for (let col=0; col<cols; col++){
+        const localX = col * dx + (row % 2 === 0 ? offsetX : 0);
+        const localY = row * dy;
+        localCenters.push({row,col,localX,localY});
+      }
+    }
+
+    const halfW = dx/2, topExt = r;
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    for (const c of localCenters){
+      minX=Math.min(minX, c.localX-halfW);
+      maxX=Math.max(maxX, c.localX+halfW);
+      minY=Math.min(minY, c.localY-topExt);
+      maxY=Math.max(maxY, c.localY+topExt);
+    }
+
+    const gridW = maxX-minX;
+    const gridH = maxY-minY;
+    const worldH = gridH + padTop + padBottom;
+
+    const startX = (worldW - gridW) / 2 - minX;
+    const startY = padTop - minY;
+
+    game.world = { w: worldW, h: worldH, r, dx, dy, startX, startY };
+
+    game.centers = [];
+    game.centerByKey = new Map();
+
+    for (const c of localCenters){
+      const cx = startX + c.localX;
+      const cy = startY + c.localY;
+      const obj = { row:c.row, col:c.col, cx, cy };
+      game.centers.push(obj);
+      game.centerByKey.set(keyOf(c.row,c.col), obj);
+    }
+
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.crossOrigin = "anonymous";
+      i.onload = () => resolve(i);
+      i.onerror = reject;
+      i.src = MAP_IMAGE;
+    });
+
+    const canvas = document.createElement("canvas");
+    canvas.width = worldW;
+    canvas.height = worldH;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    drawImageCover(ctx, img, 0, 0, worldW, worldH);
+
+    game.terrainAt = new Map();
+    const sampleRadius = Math.max(10, Math.floor(r * 0.28));
+
+    for (const c of game.centers){
+      const t = classifyByVoting(ctx, c.cx, c.cy, sampleRadius);
+      game.terrainAt.set(keyOf(c.row,c.col), t);
+    }
+
+    spawnInitialUnits();
+    applyStartOfTurnEffects(game.activePlayer);
+    resetTurnStateForPlayer(game.activePlayer);
+    game.visible = computeVisibleFor(game.activePlayer);
+
+    setLocked(false);
+    applyHUD();
+    render();
+    toast(`Spiel gestartet (${app.mode}) · Map: ${app.map?.id ?? "-"}`, "ok", 1600);
+  }
+
+  // Events
+  skipPhaseBtn.addEventListener("click", () => {
+    if (app.screen !== "game") return;
+    if (game.locked || game.modalOpen) return;
+    nextPhase();
+  });
+
+  endTurnBtn.addEventListener("click", () => {
+    if (app.screen !== "game") return;
+    if (game.locked || game.modalOpen) return;
+    if (game.phase !== "shoot") return;
+    endTurn();
+  });
+
+  readyBtn.addEventListener("click", () => {
+    if (app.screen !== "game") return;
+    readyNext();
+  });
+
+  toggleOverviewBtn.addEventListener("click", () => {
+    unitOverview.classList.toggle("isOpen");
+    collapseOverviewBtn.textContent = unitOverview.classList.contains("isOpen") ? "Ausblenden" : "Einblenden";
+  });
+
+  collapseOverviewBtn.addEventListener("click", () => {
+    unitOverview.classList.toggle("isOpen");
+    collapseOverviewBtn.textContent = unitOverview.classList.contains("isOpen") ? "Ausblenden" : "Einblenden";
+  });
+
+  window.addEventListener("resize", () => {
+    if (app.screen === "game") render();
+  });
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal && game.modalOpen){
+      modalNoBtn.click();
+    }
+  });
+
+  // Initial: Menü zeigen (kein Auto-Start)
+  showStartScreen();
+</script>
+
+</body>
+</html>
