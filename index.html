@@ -380,14 +380,26 @@
 .unit--p2{ fill: var(--p2Color); }
 .selectedRing{ stroke: var(--p1Ring); }
 
+/* Punkt-Füllung kommt schon über --p1Color / --p2Color (so wie du es bisher hast) */
+
+/* Outline/Stroke abhängig vom Owner */
+.unit--p1 .unitDot{ stroke: var(--p1Stroke); }
+.unit--p2 .unitDot{ stroke: rgba(255,255,255,0.95); }
+
+/* Text abhängig vom Owner */
+.unit--p1 .unitLabel{ fill: var(--p1Text); }
+.unit--p2 .unitLabel{ fill: rgba(255,255,255,0.95); }
+
+
 
     .unitLabel{
-      font-size: 12px;
-      font-weight: 800;
-      fill: rgba(255,255,255,0.95);
-      text-anchor: middle;
-      pointer-events: none;
-    }
+  font-size: 12px;
+  font-weight: 800;
+  fill: currentColor;      /* <— statt festem Weiss */
+  text-anchor: middle;
+  pointer-events: none;
+}
+
 
     .selectedRing{
       fill: none;
@@ -859,7 +871,8 @@
   // Maps (2 Stück aktuell)
   const MAPS = [
     { id:"m1", img:"map-fantasy.jpg" },
-    { id:"m2", img:"map-fantasy-2.jpg" }
+    { id:"m2", img:"map-fantasy-2.jpg" },
+    { id:"m3", img:"map-fantasy-3.jpg" }
   ];
 
   // Wird beim Start aus dem Menü gesetzt
@@ -1071,23 +1084,37 @@ function applySkinAndUpgrades(){
   const shop = loadShop();
   const root = document.documentElement;
 
-  // P2 bleibt standard blau, du kannst das später ebenfalls skinnbar machen.
+  // P2 bleibt standard blau
   root.style.setProperty("--p2Color", "rgba(37,99,235,0.92)");
 
-  if (shop.activeSkin && shop.activeSkin !== "default" && shop.ownedSkins[shop.activeSkin]){
-    const s = SKINS[shop.activeSkin];
-    root.style.setProperty("--p1Color", s?.p1 || "rgba(220,38,38,0.92)");
+  // Defaults IMMER setzen (wichtig, sonst bleiben alte Werte hängen)
+  root.style.setProperty("--p1Color", "rgba(220,38,38,0.92)");
+  root.style.setProperty("--p1Text", "rgba(255,255,255,0.95)");
+  root.style.setProperty("--p1Stroke", "rgba(255,255,255,0.95)");
+  root.style.setProperty("--p1Ring", "rgba(255,255,255,0.95)");
 
-    // Ring: bei sehr hellen Skins dunkler machen
-    const ring = (shop.activeSkin === "white") ? "rgba(15,23,42,0.90)" : "rgba(255,255,255,0.95)";
-    root.style.setProperty("--p1Ring", ring);
-  } else {
-    root.style.setProperty("--p1Color", "rgba(220,38,38,0.92)");
-    root.style.setProperty("--p1Ring", "rgba(255,255,255,0.95)");
+  const hasSkin =
+    shop.activeSkin &&
+    shop.activeSkin !== "default" &&
+    shop.ownedSkins &&
+    shop.ownedSkins[shop.activeSkin];
+
+  if (hasSkin){
+    const s = SKINS[shop.activeSkin];
+    const p1 = s?.p1 || "#dc2626"; // hex oder rgba beides ok
+    root.style.setProperty("--p1Color", p1);
+
+    // White-Skin Kontrast
+    if (shop.activeSkin === "white"){
+      root.style.setProperty("--p1Text", "rgba(15,23,42,0.92)");
+      root.style.setProperty("--p1Stroke", "rgba(15,23,42,0.70)");
+      root.style.setProperty("--p1Ring", "rgba(15,23,42,0.90)");
+    }
   }
 
-  // Symbol-Upgrade: wir speichern nur bool und rechnen in render()
+  // Upgrades (Symbol etc.) werden weiterhin wie bisher in render() verwendet
 }
+
 
 
   function loadAllTeams(){
