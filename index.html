@@ -33,7 +33,7 @@
       --fogFill: rgba(255,255,255,0.62);
       --fogStroke: rgba(203,213,225,0.40);
 
-      /* Overlays (hell/weiß) */
+      /* Overlays (hell/weiss) */
       --visionFill: rgba(255,255,255,0.18);
       --visionStroke: rgba(255,255,255,0.42);
 
@@ -42,6 +42,10 @@
 
       --shootFill: rgba(220,38,38,0.08);
 --shootStroke: rgba(220,38,38,0.22);
+--p1Color: rgba(220,38,38,0.92);
+--p2Color: rgba(37,99,235,0.92);
+--p1Ring: rgba(255,255,255,0.95);
+
 
 
     }
@@ -70,13 +74,32 @@
     }
 
     header.top{
-      display:flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #eef2f7;
-    }
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(6px);
+}
+
+.footerBar{
+  position: sticky;
+  bottom: 0;
+  z-index: 120;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(6px);
+  border-top: 1px solid #eef2f7;
+  padding: 10px 12px;
+  display:flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items:center;
+}
+
+.board{
+  /* wichtig: genug Platz, damit Footer nicht über dem Spielfeld liegt */
+  padding-bottom: 84px;
+}
+
 
     .leftHead{
       display:flex;
@@ -353,8 +376,10 @@
       stroke: rgba(255,255,255,0.95);
       stroke-width: 2;
     }
-    .unit--p1{ fill: rgba(220,38,38,0.92); }
-    .unit--p2{ fill: rgba(37,99,235,0.92); }
+    .unit--p1{ fill: var(--p1Color); }
+.unit--p2{ fill: var(--p2Color); }
+.selectedRing{ stroke: var(--p1Ring); }
+
 
     .unitLabel{
       font-size: 12px;
@@ -612,14 +637,12 @@
 }
 
     .pickerList{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 6px;
-    }
-    @media (max-width: 520px){
-      .pickerList{ grid-template-columns: 1fr; }
-    }
+  display:grid;
+  grid-template-columns: 1fr; /* immer eine Spalte */
+  gap: 10px;
+  margin-top: 6px;
+}
+
     .pickerBtn{
       text-align:left;
       padding: 12px;
@@ -692,13 +715,35 @@
         </div>
 
         <div class="startBtns">
-          <button id="btnStart3">3v3 starten</button>
-          <button id="btnStart5">5v5 starten</button>
-        </div>
+  <button id="btnLocal3">3v3 lokal (2 Spieler)</button>
+  <button id="btnLocal5">5v5 lokal (2 Spieler)</button>
+  <button id="btnBot3">3v3 gegen Bot</button>
+  <button id="btnBot5">5v5 gegen Bot</button>
+</div>
+
+<div style="margin-top:6px; border-top:1px solid #eef2f7; padding-top:10px;">
+  <div class="startSub" style="font-weight:900; color:#0f172a;">Bot-Schwierigkeit</div>
+  <div class="startHint" style="margin-top:2px;">Wird nur bei “gegen Bot” verwendet.</div>
+
+  <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+    <button id="btnDiffEasy">Easy</button>
+    <button id="btnDiffNormal">Normal</button>
+    <button id="btnDiffHard">Hard</button>
+    <div class="pill"><span class="muted">Aktuell:</span> <strong id="diffVal">Normal</strong></div>
+    <div class="pill"><span class="muted">Coins:</span> <strong id="coinVal">0</strong></div>
+<button id="shopBtn">Shop</button>
+
+  </div>
+</div>
+
 
         <div class="startHint">
           Alle Einheiten sind von Anfang an verfügbar. Teams werden pro Spieler & Modus dauerhaft gespeichert.
         </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap; margin-top:6px;">
+  <button id="btnRules">Regeln</button>
+</div>
+
       </div>
     </div>
 
@@ -714,6 +759,9 @@
 
         <div id="builderSlots" class="builderSlots"></div>
 
+
+  
+
         <div style="display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
           <button id="btnBuilderClear">Standard</button>
           <button id="btnBuilderBack">Zurück</button>
@@ -725,6 +773,22 @@
         </div>
       </div>
     </div>
+<div class="startScreen" id="shopScreen" style="z-index:270;">
+  <div class="startCard">
+    <div class="startTitle" style="font-size:18px;">Shop</div>
+    <div class="startSub">Skins & Upgrades (lokal gespeichert)</div>
+
+    <div class="pill" style="margin-bottom:8px;">
+      <span class="muted">Coins:</span> <strong id="shopCoinsVal">0</strong>
+    </div>
+
+    <div id="shopList" class="pickerList"></div>
+
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+      <button id="btnShopClose">Schliessen</button>
+    </div>
+  </div>
+</div>
 
     <!-- Unit Picker (Overlay) -->
     <div class="startScreen" id="pickerScreen" style="z-index:260;">
@@ -732,6 +796,21 @@
       <div class="startCard">
         <div class="startTitle" style="font-size:18px;">Einheit wählen</div>
         <div class="startSub" id="pickerSub">Slot</div>
+        <div class="pill" style="margin-bottom:8px;">
+  <span class="muted">Sortierung:</span>
+  <select id="pickerSort" style="border:none; font-weight:900; outline:none;">
+    <option value="name_asc">Name A–Z</option>
+    <option value="hp_desc">HP hoch→tief</option>
+    <option value="hp_asc">HP tief→hoch</option>
+    <option value="atk_desc">ATK hoch→tief</option>
+    <option value="atk_asc">ATK tief→hoch</option>
+    <option value="move_desc">MP hoch→tief</option>
+    <option value="move_asc">MP tief→hoch</option>
+    <option value="range_desc">Range hoch→tief</option>
+    <option value="range_asc">Range tief→hoch</option>
+  </select>
+</div>
+
         <div id="pickerList" class="pickerList"></div>
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
           <button id="btnPickerCancel">Abbrechen</button>
@@ -766,6 +845,11 @@
 
     <svg id="svg" class="hexsvg" role="img" aria-label="Hex Grid"></svg>
   </section>
+  <footer class="footerBar">
+  <button id="skipPhaseBtn2">Phase</button>
+  <button id="endTurnBtn2" disabled>Zug</button>
+</footer>
+
 </main>
 
 <script>
@@ -785,6 +869,11 @@
 
   const svg = document.getElementById("svg");
   const board = document.getElementById("board");
+const skipPhaseBtn2 = document.getElementById("skipPhaseBtn2");
+const endTurnBtn2   = document.getElementById("endTurnBtn2");
+
+skipPhaseBtn2.addEventListener("click", () => skipPhaseBtn.click());
+endTurnBtn2.addEventListener("click", () => endTurnBtn.click());
 
   const skipPhaseBtn = document.getElementById("skipPhaseBtn");
   const endTurnBtn = document.getElementById("endTurnBtn");
@@ -818,8 +907,18 @@
 
   // Start Screen elements
   const startScreen = document.getElementById("startScreen");
-  const btnStart3 = document.getElementById("btnStart3");
-  const btnStart5 = document.getElementById("btnStart5");
+  const btnRules = document.getElementById("btnRules");
+
+  const btnLocal3 = document.getElementById("btnLocal3");
+const btnLocal5 = document.getElementById("btnLocal5");
+const btnBot3   = document.getElementById("btnBot3");
+const btnBot5   = document.getElementById("btnBot5");
+
+const btnDiffEasy   = document.getElementById("btnDiffEasy");
+const btnDiffNormal = document.getElementById("btnDiffNormal");
+const btnDiffHard   = document.getElementById("btnDiffHard");
+const diffVal       = document.getElementById("diffVal");
+
 
   // Team Builder elements
   const builderScreen = document.getElementById("builderScreen");
@@ -830,22 +929,35 @@
   const btnBuilderBack = document.getElementById("btnBuilderBack");
   const btnBuilderSaveNext = document.getElementById("btnBuilderSaveNext");
 
+
+
   const pickerScreen = document.getElementById("pickerScreen");
   const pickerSub = document.getElementById("pickerSub");
   const pickerList = document.getElementById("pickerList");
+  const pickerSort = document.getElementById("pickerSort");
+
   const btnPickerCancel = document.getElementById("btnPickerCancel");
   let pickerSlotIndex = -1;
+  let builderActiveSlotIndex = 0; // default: Slot 1
+
+const shopScreen = document.getElementById("shopScreen");
+const shopList = document.getElementById("shopList");
+const shopCoinsVal = document.getElementById("shopCoinsVal");
+const btnShopClose = document.getElementById("btnShopClose");
 
   // App State (menu/builder/game)
-  const app = {
-    screen: "menu",   // "menu" | "builder" | "game"
-    mode: "3v3",      // "3v3" | "5v5"
-    online: false,
-    map: null,
+const app = {
+  screen: "menu",      // "menu" | "builder" | "game"
+  mode: "3v3",         // "3v3" | "5v5"
+  opponent: "local",   // "local" | "bot"
+  botDifficulty: "normal", // "easy" | "normal" | "hard"
+  online: false,
+  map: null,
 
-    builderPlayer: 1,
-    builderSlots: [],
-  };
+  builderPlayer: 1,
+  builderSlots: [],
+};
+
 
   function showScreen(name){
     app.screen = name;
@@ -861,8 +973,23 @@
     renderUnitOverview();
   }
 
+  function setBotDifficulty(diff){
+  app.botDifficulty = diff; // "easy" | "normal" | "hard"
+  diffVal.textContent = (diff === "easy") ? "Easy" : (diff === "hard") ? "Hard" : "Normal";
+}
+btnDiffEasy.addEventListener("click", () => setBotDifficulty("easy"));
+btnDiffNormal.addEventListener("click", () => setBotDifficulty("normal"));
+btnDiffHard.addEventListener("click", () => setBotDifficulty("hard"));
+
+// Default anzeigen
+setBotDifficulty(app.botDifficulty);
+
+
   function showStartScreen(){
     showScreen("menu");
+    applySkinAndUpgrades();
+updateCoinUI();
+
   }
   function hideStartScreen(){
     startScreen.classList.remove("isVisible");
@@ -880,6 +1007,88 @@
 
   // ===== Team Storage (localStorage) =====
   const STORAGE_KEY = "hexagon_teams_v1";
+
+// ===== Coins & Shop Storage =====
+const COIN_KEY = "hexagon_coins_v1";
+const SHOP_KEY = "hexagon_shop_v1"; // owned skins + upgrades + active selection
+
+function loadCoins(){
+  const n = Number(localStorage.getItem(COIN_KEY) || "0");
+  return Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+}
+function saveCoins(n){
+  localStorage.setItem(COIN_KEY, String(Math.max(0, Math.floor(n))));
+}
+function addCoins(delta){
+  const cur = loadCoins();
+  const next = cur + (delta|0);
+  saveCoins(next);
+  updateCoinUI();
+  return next;
+}
+function spendCoins(cost){
+  const cur = loadCoins();
+  if (cur < cost) return { ok:false, coins:cur };
+  const next = cur - cost;
+  saveCoins(next);
+  updateCoinUI();
+  return { ok:true, coins:next };
+}
+
+function loadShop(){
+  try{
+    return JSON.parse(localStorage.getItem(SHOP_KEY) || "null") || {
+      ownedSkins: {},          // { green:true, yellow:true, ... }
+      activeSkin: "default",   // "default" | "green" | "yellow" | ...
+      bigSymbols: false,       // upgrade
+    };
+  }catch{
+    return { ownedSkins:{}, activeSkin:"default", bigSymbols:false };
+  }
+}
+function saveShop(s){
+  localStorage.setItem(SHOP_KEY, JSON.stringify(s));
+}
+
+const SKINS = {
+  green:    { label:"Grün",     cost:75,  p1:"#16a34a" },
+  yellow:   { label:"Gelb",     cost:75,  p1:"#facc15" },
+  black:    { label:"Schwarz",  cost:50,  p1:"#0b0f19" },
+  white:    { label:"Weiss",    cost:50,  p1:"#f8fafc" },
+  beige:    { label:"Beige",    cost:100, p1:"#d6c7b2" },
+  babyblue: { label:"Babyblau", cost:100, p1:"#93c5fd" },
+  violet:   { label:"Violett",  cost:100, p1:"#8b5cf6" },
+};
+
+const coinVal = document.getElementById("coinVal");
+const shopBtn = document.getElementById("shopBtn");
+
+function updateCoinUI(){
+  if (coinVal) coinVal.textContent = String(loadCoins());
+}
+
+function applySkinAndUpgrades(){
+  const shop = loadShop();
+  const root = document.documentElement;
+
+  // P2 bleibt standard blau, du kannst das später ebenfalls skinnbar machen.
+  root.style.setProperty("--p2Color", "rgba(37,99,235,0.92)");
+
+  if (shop.activeSkin && shop.activeSkin !== "default" && shop.ownedSkins[shop.activeSkin]){
+    const s = SKINS[shop.activeSkin];
+    root.style.setProperty("--p1Color", s?.p1 || "rgba(220,38,38,0.92)");
+
+    // Ring: bei sehr hellen Skins dunkler machen
+    const ring = (shop.activeSkin === "white") ? "rgba(15,23,42,0.90)" : "rgba(255,255,255,0.95)";
+    root.style.setProperty("--p1Ring", ring);
+  } else {
+    root.style.setProperty("--p1Color", "rgba(220,38,38,0.92)");
+    root.style.setProperty("--p1Ring", "rgba(255,255,255,0.95)");
+  }
+
+  // Symbol-Upgrade: wir speichern nur bool und rechnen in render()
+}
+
 
   function loadAllTeams(){
     try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
@@ -909,7 +1118,6 @@
   // ===== Toast =====
   function toast(msg, kind = "warn", ms = 1600){
     const now = Date.now();
-    if (now - lastToastAt < 90) return;
     lastToastAt = now;
 
     toastEl.textContent = msg;
@@ -921,6 +1129,105 @@
       toastEl.classList.remove("isVisible");
     }, ms);
   }
+
+  function openShop(){
+  renderShop();
+  shopScreen.classList.add("isVisible");
+}
+function closeShop(){
+  shopScreen.classList.remove("isVisible");
+}
+
+function renderShop(){
+  const shop = loadShop();
+  const coins = loadCoins();
+  if (shopCoinsVal) shopCoinsVal.textContent = String(coins);
+
+  shopList.innerHTML = "";
+
+  // --- Upgrade: Big Symbols ---
+  const up = document.createElement("button");
+  up.className = "pickerBtn";
+  const ownedUp = !!shop.bigSymbols;
+  up.innerHTML = `
+    <strong>Upgrade: Einheiten-Symbol ×2</strong>
+    <span>Kosten: 50 Coins</span>
+    <span>${ownedUp ? "Gekauft" : "Nicht gekauft"}</span>
+  `;
+  up.addEventListener("click", () => {
+    const s = loadShop();
+    if (s.bigSymbols){
+      toast("Upgrade ist bereits gekauft.", "warn");
+      return;
+    }
+    const pay = spendCoins(50);
+    if (!pay.ok){
+      toast("Zu wenig Coins.", "bad");
+      return;
+    }
+    s.bigSymbols = true;
+    saveShop(s);
+    applySkinAndUpgrades();
+    renderShop();
+    render(); // sofort sichtbar
+    toast("Upgrade gekauft: Symbole sind jetzt grösser.", "ok", 1600);
+  });
+  shopList.appendChild(up);
+
+  // Divider
+  const div = document.createElement("div");
+  div.className = "startSub";
+  div.style.marginTop = "10px";
+  div.style.fontWeight = "1000";
+  div.style.color = "#0f172a";
+  div.textContent = "Skins";
+  shopList.appendChild(div);
+
+  // --- Skins ---
+  for (const key of Object.keys(SKINS)){
+    const def = SKINS[key];
+    const owned = !!shop.ownedSkins[key];
+    const active = (shop.activeSkin === key);
+
+    const b = document.createElement("button");
+    b.className = "pickerBtn";
+    b.innerHTML = `
+      <strong>${def.label}</strong>
+      <span>${owned ? "Gekauft" : `Kosten: ${def.cost} Coins`}</span>
+      <span>${owned ? (active ? "Aktiv" : "Klicken zum Aktivieren") : "Klicken zum Kaufen"}</span>
+    `;
+
+    b.addEventListener("click", () => {
+      const s = loadShop();
+
+      if (!s.ownedSkins[key]){
+        const pay = spendCoins(def.cost);
+        if (!pay.ok){
+          toast("Zu wenig Coins.", "bad");
+          return;
+        }
+        s.ownedSkins[key] = true;
+        s.activeSkin = key; // nach Kauf direkt aktivieren
+        saveShop(s);
+        applySkinAndUpgrades();
+        renderShop();
+        render();
+        toast(`Skin gekauft & aktiviert: ${def.label}.`, "ok", 1600);
+        return;
+      }
+
+      // Owned -> activate
+      s.activeSkin = key;
+      saveShop(s);
+      applySkinAndUpgrades();
+      renderShop();
+      render();
+      toast(`Skin aktiviert: ${def.label}.`, "ok", 1200);
+    });
+
+    shopList.appendChild(b);
+  }
+}
 
   function abilityMayTargetFog(kind){
   // Nur Aufklärung darf ins Unbekannte
@@ -964,13 +1271,40 @@ function effRange(unit){
 
   const PHASES = ["move","ability","shoot"];
 
+  const RULES_TEXT = 
+`Ziel
+- Eliminiere alle gegnerischen Einheiten. Dann ist das Spiel vorbei.
+
+Rundenablauf
+1) Bewegen: Einheit wählen → auf ein sichtbares Feld klicken (MP werden abgezogen).
+2) Fähigkeit: Einheit wählen → Fähigkeit bestätigen. Manche Fähigkeiten brauchen ein Ziel-Feld.
+3) Schiessen: Angreifer wählen → Gegner anklicken (oder Feld für Blindschuss).
+
+Fog of War
+- Du siehst nur Felder, die deine Einheiten aufdecken.
+- Einheiten im Wald sind schwerer sichtbar (Spotting-Regel).
+
+Terrain
+- Land: normale Bewegungskosten.
+- Wasser: höhere Bewegungskosten (wenn passierbar).
+- Wald: höhere Bewegungskosten + Sicht/Range werden reduziert (bei Einheiten im Wald).
+
+Status / Effekte
+- Schilde absorbieren Schaden.
+- Brand verursacht Schaden zu Beginn der nächsten Runde.
+- Slow reduziert MP in der nächsten Runde.
+
+Tipp
+- Erst aufklären (Scout/Waldläufer), dann fokussiert eliminieren.`;
+
+
   // ============ Units (25)
   const UNIT_DEFS = {
     tank:   { key:"tank",   name:"Panzer", role:"Schwere Front",   move: 6,  atk: 4, hp: 5, vision: 2, range: 8, movePenaltyNext: 2, hitBase: 0.75,
       ability:{ id:"kriegsmodus", title:"Kriegsmodus", text:"Effekt: +1 Angriff (nur diese Runde).\nNachteil: -2 MP nächste Runde.", kind:"self_buff_atk", params:{atkPlus:1, until:"turnEnd"} } },
-    soldier:{ key:"soldier",name:"Soldat", role:"Allrounder",       move:10,  atk: 2, hp: 4, vision: 3, range: 5, movePenaltyNext: 4, hitBase: 0.65,
+    soldier:{ key:"soldier",name:"Soldat", role:"Allrounder",       move:8,  atk: 2, hp: 4, vision: 3, range: 5, movePenaltyNext: 4, hitBase: 0.65,
       ability:{ id:"adrenalin", title:"Adrenalin", text:"Effekt: +1 HP (bis Max).\nNachteil: -4 MP nächste Runde.", kind:"self_heal", params:{hpPlus:1} } },
-    scout:  { key:"scout",  name:"Späher", role:"Aufklärung",       move:16,  atk: 1, hp: 2, vision: 6, range: 3, movePenaltyNext: 8, hitBase: 0.55,
+    scout:  { key:"scout",  name:"Späher", role:"Aufklärung",       move:12,  atk: 1, hp: 2, vision: 6, range: 3, movePenaltyNext: 8, hitBase: 0.55,
       ability:{ id:"aufklaerung", title:"Aufklärung", text:"Effekt: Wähle ein Feld, das 2 Runden aufgedeckt wird.\nNachteil: -8 MP nächste Runde.", kind:"target_reveal_single", params:{revealRounds:2} } },
 
     ritter:{ name:"Ritter", role:"Schwerer Frontkämpfer", move: 6, atk: 3, hp: 6, vision: 2, range: 1, movePenaltyNext: 2, hitBase: 0.70,
@@ -982,14 +1316,14 @@ function effRange(unit){
     armbrustschuetze:{ name:"Armbrustschütze", role:"Präzisionsschütze", move: 7, atk: 4, hp: 3, vision: 3, range: 5, movePenaltyNext: 3, hitBase: 0.60,
       ability:{ id:"ruestungsdurchschlag", title:"Rüstungsdurchschlag", text:"Effekt: +1 Schaden gegen Ziele mit HP-Max ≥ 5 (nächster Schuss diese Runde).\nNachteil: -3 MP nächste Runde.", kind:"self_bonus_vs_heavy", params:{bonus:1, heavyHpMax:5, until:"turnEnd"} } },
     pikenier:{ name:"Pikenier", role:"Anti-Sturm-Infanterie", move: 8, atk: 3, hp: 4, vision: 3, range: 2, movePenaltyNext: 2, hitBase: 0.66,
-      ability:{ id:"spiessformation", title:"Spießformation", text:"Effekt: +1 Schaden gegen Ziele mit HP-Max ≥ 5 (nächster Schuss diese Runde).\nNachteil: -2 MP nächste Runde.", kind:"self_bonus_vs_heavy", params:{bonus:1, heavyHpMax:5, until:"turnEnd"} } },
+      ability:{ id:"spiessformation", title:"Spiessformation", text:"Effekt: +1 Schaden gegen Ziele mit HP-Max ≥ 5 (nächster Schuss diese Runde).\nNachteil: -2 MP nächste Runde.", kind:"self_bonus_vs_heavy", params:{bonus:1, heavyHpMax:5, until:"turnEnd"} } },
     katapult:{ name:"Katapult", role:"Belagerungseinheit", move: 4, atk: 5, hp: 3, vision: 2, range: 6, movePenaltyNext: 4, hitBase: 0.52,
       ability:{ id:"flaechenbeschuss", title:"Flächenbeschuss", text:"Effekt: Wähle ein Feld (sichtbar). Zieleinheit + Nachbarfelder werden beschossen (AoE, je Ziel 70% Trefferchance, 1 Schaden).\nNachteil: -4 MP nächste Runde.", kind:"target_aoe_damage", params:{radius:1, damage:1, hitChance:0.70} } },
 
     zauberer:{ name:"Zauberer", role:"Glaskanone", move: 8, atk: 4, hp: 2, vision: 4, range: 4, movePenaltyNext: 4, hitBase: 0.58,
       ability:{ id:"arkane_entladung", title:"Arkane Entladung", text:"Effekt: +2 Schaden für den nächsten Schuss diese Runde.\nNachteil: -4 MP nächste Runde.", kind:"self_bonus_damage_next", params:{bonus:2, until:"turnEnd"} } },
     feuermagier:{ name:"Feuermagier", role:"Burst-Zauberer", move: 7, atk: 5, hp: 2, vision: 3, range: 3, movePenaltyNext: 4, hitBase: 0.56,
-      ability:{ id:"feuerstoss", title:"Feuerstoß", text:"Effekt: Setzt Brand auf Ziel (bei Treffer): Ziel erhält am Start seiner nächsten Runde 1 Schaden.\nNachteil: -4 MP nächste Runde.", kind:"self_apply_burn", params:{burnDamage:1, burnRounds:1} } },
+      ability:{ id:"feuerstoss", title:"Feuerstoss", text:"Effekt: Setzt Brand auf Ziel (bei Treffer): Ziel erhält am Start seiner nächsten Runde 1 Schaden.\nNachteil: -4 MP nächste Runde.", kind:"self_apply_burn", params:{burnDamage:1, burnRounds:1} } },
     eismagier:{ name:"Eismagier", role:"Kontrollzauberer", move: 7, atk: 3, hp: 3, vision: 4, range: 3, movePenaltyNext: 3, hitBase: 0.60,
       ability:{ id:"frostgriff", title:"Frostgriff", text:"Effekt: Nächster Treffer verlangsamt Ziel: -4 MP in seiner nächsten Runde.\nNachteil: -3 MP nächste Runde.", kind:"self_apply_slow", params:{slowAmount:4, slowRounds:1} } },
     nekromant:{ name:"Nekromant", role:"Zermürber", move: 7, atk: 2, hp: 3, vision: 4, range: 3, movePenaltyNext: 3, hitBase: 0.60,
@@ -1002,13 +1336,13 @@ function effRange(unit){
       ability:{ id:"beschworene_zone", title:"Beschworene Zone", text:"Effekt: Wähle ein Feld (sichtbar). Gegner zahlen 2× Bewegungskosten beim Betreten dieses Feldes (1 Runde).\nNachteil: -3 MP nächste Runde.", kind:"target_danger_zone", params:{factor:2, rounds:1} } },
 
     ninja:{ name:"Ninja", role:"Attentäter", move:12, atk: 4, hp: 3, vision: 4, range: 2, movePenaltyNext: 4, hitBase: 0.62,
-      ability:{ id:"schattenstoss", title:"Schattenstoß", text:"Effekt: Nächster Treffer aus Wald verursacht +1 Schaden.\nNachteil: -4 MP nächste Runde.", kind:"self_forest_damage_bonus_next", params:{bonus:1} } },
+      ability:{ id:"schattenstoss", title:"Schattenstoss", text:"Effekt: Nächster Treffer aus Wald verursacht +1 Schaden.\nNachteil: -4 MP nächste Runde.", kind:"self_forest_damage_bonus_next", params:{bonus:1} } },
     schattenninja:{ name:"Schatten-Ninja", role:"Tarnassassine", move:11, atk: 5, hp: 2, vision: 4, range: 2, movePenaltyNext: 5, hitBase: 0.58,
-      ability:{ id:"verschwinden", title:"Verschwinden", text:"Effekt: Du wirst bis zum Ende der nächsten gegnerischen Runde 'unsichtbar' (außer Nahsicht).\nNachteil: -5 MP nächste Runde.", kind:"self_invisible", params:{rounds:2, spotRange:1} } },
+      ability:{ id:"verschwinden", title:"Verschwinden", text:"Effekt: Du wirst bis zum Ende der nächsten gegnerischen Runde 'unsichtbar' (ausser Nahsicht).\nNachteil: -5 MP nächste Runde.", kind:"self_invisible", params:{rounds:2, spotRange:1} } },
     samurai:{ name:"Samurai", role:"Duellant", move: 9, atk: 4, hp: 4, vision: 3, range: 1, movePenaltyNext: 3, hitBase: 0.72,
       ability:{ id:"duellhaltung", title:"Duellhaltung", text:"Effekt: Wenn du diese Runde triffst, verursachst du +1 Schaden (nächster Treffer).\nNachteil: -3 MP nächste Runde.", kind:"self_bonus_damage_next", params:{bonus:1, until:"turnEnd"} } },
     ronin:{ name:"Ronin", role:"Aggressiver Nahkämpfer", move:11, atk: 3, hp: 3, vision: 3, range: 1, movePenaltyNext: 4, hitBase: 0.70,
-      ability:{ id:"vorstoss", title:"Vorstoß", text:"Effekt: +3 MP sofort, aber du erhältst 1 Schaden am Ende der Runde.\nNachteil: -4 MP nächste Runde.", kind:"self_dash_with_cost", params:{mpPlus:3, selfDamageEndTurn:1} } },
+      ability:{ id:"vorstoss", title:"Vorstoss", text:"Effekt: +3 MP sofort, aber du erhältst 1 Schaden am Ende der Runde.\nNachteil: -4 MP nächste Runde.", kind:"self_dash_with_cost", params:{mpPlus:3, selfDamageEndTurn:1} } },
     shinobispaher:{ name:"Shinobi-Späher", role:"Aufklärungseinheit", move:14, atk: 1, hp: 2, vision: 5, range: 1, movePenaltyNext: 6, hitBase: 0.55,
       ability:{ id:"totale_aufklaerung", title:"Totale Aufklärung", text:"Effekt: Dein Team sieht 1 Runde lang die gesamte Karte (Fog aufgehoben).\nNachteil: -6 MP nächste Runde.", kind:"global_reveal_all", params:{rounds:1} } },
     anime_schuetze:{ name:"Anime-Schütze", role:"Mobiler Fernkämpfer", move: 9, atk: 4, hp: 3, vision: 3, range: 4, movePenaltyNext: 5, hitBase: 0.60,
@@ -1024,6 +1358,45 @@ function effRange(unit){
 
   // ===== Unit Catalog (alle Einheiten verfügbar) =====
   const UNIT_KEYS = Object.keys(UNIT_DEFS);
+  function unitClass(type){
+  const d = UNIT_DEFS[type];
+  if (!d) return "Sonstige";
+
+  const name = (d.name || "").toLowerCase();
+  const role = (d.role || "").toLowerCase();
+  const range = d.range | 0;
+  const move  = d.move | 0;
+  const hp    = d.hp | 0;
+
+  // 1) Stealth & Mobilität
+  if (
+    name.includes("späher") || name.includes("wald") || name.includes("ninja") ||
+    role.includes("aufklärung") || move >= 12
+  ){
+    return "Stealth & Mobilität";
+  }
+
+  // 2) Support & Kontrolle
+  if (
+    role.includes("unterstützer") || role.includes("kontroll") ||
+    name.includes("paladin") || name.includes("beschwörer") || name.includes("nekromant")
+  ){
+    return "Support & Kontrolle";
+  }
+
+  // 3) Fernkampf
+  if (range >= 3 || role.includes("fern") || role.includes("artillerie")){
+    return "Fernkampf";
+  }
+
+  // 4) Front
+  if (hp >= 5 || role.includes("front") || role.includes("defensiv") || range <= 1){
+    return "Front";
+  }
+
+  return "Sonstige";
+}
+
   function unitLabelName(type){
     const d = UNIT_DEFS[type];
     return d ? d.name : type;
@@ -1072,7 +1445,8 @@ function abilityInlineForCard(type){
 
   function renderBuilder(){
     builderTitle.textContent = "Team Builder";
-    builderSub.textContent = `Spieler ${app.builderPlayer} · Modus ${app.mode}`;
+const who = (app.opponent === "bot" && app.builderPlayer === 2) ? "Bot" : `Spieler ${app.builderPlayer}`;
+builderSub.textContent = `${who} · Modus ${app.mode} · Gegner: ${app.opponent === "bot" ? "Bot" : "Lokal"}`;
 
     const desiredSlots = (app.mode === "5v5") ? 5 : 3;
     if (!Array.isArray(app.builderSlots)) app.builderSlots = defaultTeamForMode(app.mode);
@@ -1086,6 +1460,15 @@ function abilityInlineForCard(type){
     app.builderSlots.forEach((type, idx) => {
       const row = document.createElement("div");
       row.className = "slotRow";
+      row.style.cursor = "pointer";
+row.addEventListener("click", (e) => {
+  // Klick auf Row setzt aktiven Slot, ausser der Klick war auf den Button selbst
+  if (e.target && e.target.tagName === "BUTTON") return;
+  builderActiveSlotIndex = idx;
+});
+
+
+
 
       const left = document.createElement("div");
       left.className = "slotLeft";
@@ -1103,7 +1486,12 @@ function abilityInlineForCard(type){
 
       const btn = document.createElement("button");
       btn.textContent = "Ändern";
-      btn.addEventListener("click", () => openPicker(idx));
+      btn.addEventListener("click", () => {
+  builderActiveSlotIndex = idx;
+
+  openPicker(idx);
+});
+
 
       row.appendChild(left);
       row.appendChild(btn);
@@ -1111,38 +1499,97 @@ function abilityInlineForCard(type){
     });
   }
 
-  function openPicker(slotIndex){
-    pickerSlotIndex = slotIndex;
-    pickerSub.textContent = `Slot ${slotIndex+1} · Spieler ${app.builderPlayer} · ${app.mode}`;
+  function sortUnitTypes(types, sortMode){
+  return types.slice().sort((a,b) => {
+    const da = UNIT_DEFS[a];
+    const db = UNIT_DEFS[b];
 
-    pickerList.innerHTML = "";
-
-    // Sortiert nach Name (ruhiger, besser findbar)
-    const typesSorted = UNIT_KEYS.slice().sort((a,b) => {
-      const an = (UNIT_DEFS[a]?.name || a).toLowerCase();
-      const bn = (UNIT_DEFS[b]?.name || b).toLowerCase();
-      return an.localeCompare(bn);
-    });
-
-    for (const type of typesSorted){
-      const d = UNIT_DEFS[type];
-      const b = document.createElement("button");
-      b.className = "pickerBtn";
-const abilityLine = abilityInlineForCard(type);
-b.innerHTML =
-  `<strong>${d.name} — ${d.role}</strong>` +
-  `<span>${unitStatsLine(type)}</span>` +
-  `<span style="white-space:pre-wrap; margin-top:6px;">${abilityLine}</span>`;
-      b.addEventListener("click", () => {
-        app.builderSlots[pickerSlotIndex] = type;
-        pickerScreen.classList.remove("isVisible");
-        renderBuilder();
-      });
-      pickerList.appendChild(b);
+    if (sortMode === "name_asc"){
+      return (da.name||a).localeCompare((db.name||b), "de");
     }
 
-    pickerScreen.classList.add("isVisible");
+    const desc = sortMode.endsWith("_desc");
+
+    const val = (d) => {
+      if (sortMode.startsWith("hp_")) return d.hp|0;
+      if (sortMode.startsWith("atk_")) return d.atk|0;
+      if (sortMode.startsWith("move_")) return d.move|0;
+      if (sortMode.startsWith("range_")) return d.range|0;
+      return 0;
+    };
+
+    const diff = val(da) - val(db);
+    if (diff === 0){
+      return (da.name||a).localeCompare((db.name||b), "de");
+    }
+    return desc ? -diff : diff;
+  });
+}
+
+
+
+  function openPicker(slotIndex){
+  pickerSlotIndex = slotIndex;
+  pickerSub.textContent = `Slot ${slotIndex+1} · Spieler ${app.builderPlayer} · ${app.mode}`;
+
+  function renderPicker(){
+    pickerList.innerHTML = "";
+
+    // Gruppieren wie dein unitClass()
+    const groups = new Map();
+    for (const type of UNIT_KEYS){
+      const cls = unitClass(type);
+      if (!groups.has(cls)) groups.set(cls, []);
+      groups.get(cls).push(type);
+    }
+
+    const groupOrder = ["Front", "Fernkampf", "Support & Kontrolle", "Stealth & Mobilität", "Sonstige"];
+
+    for (const gName of groupOrder){
+      const arr = groups.get(gName);
+      if (!arr || !arr.length) continue;
+
+      const sorted = sortUnitTypes(arr, pickerSort?.value || "name_asc");
+
+      const header = document.createElement("div");
+      header.className = "startSub";
+      header.style.marginTop = "8px";
+      header.style.fontWeight = "1000";
+      header.style.color = "#0f172a";
+      header.textContent = gName;
+      pickerList.appendChild(header);
+
+      for (const type of sorted){
+        const d = UNIT_DEFS[type];
+        const b = document.createElement("button");
+        b.className = "pickerBtn";
+
+        const abilityLine = abilityInlineForCard(type);
+        b.innerHTML =
+          `<strong>${d.name} — ${d.role}</strong>` +
+          `<span>${unitStatsLine(type)}</span>` +
+          `<span style="white-space:pre-wrap; margin-top:6px;">${abilityLine}</span>`;
+
+        b.addEventListener("click", () => {
+          app.builderSlots[pickerSlotIndex] = type;
+          pickerScreen.classList.remove("isVisible");
+          renderBuilder();
+        });
+
+        pickerList.appendChild(b);
+      }
+    }
   }
+
+  // Re-render bei Sortierung
+  if (pickerSort){
+    pickerSort.onchange = renderPicker;
+  }
+  renderPicker();
+
+  pickerScreen.classList.add("isVisible");
+}
+
 
   btnPickerCancel.addEventListener("click", () => {
     pickerScreen.classList.remove("isVisible");
@@ -1162,12 +1609,22 @@ b.innerHTML =
     saveTeam(app.builderPlayer, app.mode, app.builderSlots);
 
     if (app.builderPlayer === 1){
-      app.builderPlayer = 2;
-      app.builderSlots = loadTeam(2, app.mode);
-      renderBuilder();
-      toast("Spieler 1 gespeichert. Jetzt Spieler 2.", "ok", 1600);
-      return;
-    }
+
+  // Wenn Bot: kein Spieler-2-Builder, direkt Match starten
+  if (app.opponent === "bot"){
+    toast(`Spieler 1 gespeichert. Bot (${app.botDifficulty}) wird vorbereitet…`, "ok", 1400);
+    await startNewMatch(app.mode);
+    return;
+  }
+
+  // Lokal: wie bisher Spieler 2 bauen
+  app.builderPlayer = 2;
+  app.builderSlots = loadTeam(2, app.mode);
+  renderBuilder();
+  toast("Spieler 1 gespeichert. Jetzt Spieler 2.", "ok", 1600);
+  return;
+}
+
 
     toast("Spieler 2 gespeichert. Match startet…", "ok", 1400);
     await startNewMatch(app.mode);
@@ -1218,9 +1675,12 @@ b.innerHTML =
     await buildOnce().catch(console.error);
   }
 
-  // Start buttons -> Builder statt direkt Match
-  btnStart3.addEventListener("click", () => startBuilder("3v3"));
-  btnStart5.addEventListener("click", () => startBuilder("5v5"));
+  btnLocal3.addEventListener("click", () => { app.opponent = "local"; startBuilder("3v3"); });
+btnLocal5.addEventListener("click", () => { app.opponent = "local"; startBuilder("5v5"); });
+
+btnBot3.addEventListener("click", () => { app.opponent = "bot"; startBuilder("3v3"); });
+btnBot5.addEventListener("click", () => { app.opponent = "bot"; startBuilder("5v5"); });
+
 
   // ============ Spiel-State
   const game = {
@@ -1265,28 +1725,70 @@ b.innerHTML =
 
   function setHint(msg){ hintLine.textContent = msg; }
 
-  function openModal({title, text, yesText="Ja", noText="Nein"}){
-    return new Promise((resolve) => {
-      game.modalOpen = true;
-      modalTitle.textContent = title;
-      modalText.textContent = text;
-      modalYesBtn.textContent = yesText;
-      modalNoBtn.textContent = noText;
+function calcCoinRewardForWin({ survivors, opponent, botDifficulty }){
+  // Basisregeln
+  const baseWin = 10;
+  const baseSurvivors = survivors * 5;
 
-      modal.classList.add("isVisible");
-
-      const cleanup = () => {
-        modal.classList.remove("isVisible");
-        game.modalOpen = false;
-        modalYesBtn.onclick = null;
-        modalNoBtn.onclick = null;
-        applyHUD();
-      };
-
-      modalYesBtn.onclick = () => { cleanup(); resolve(true); };
-      modalNoBtn.onclick  = () => { cleanup(); resolve(false); };
-    });
+  // Faktor nur gegen Bot
+  let factor = 1;
+  if (opponent === "bot"){
+    if (botDifficulty === "easy") factor = 0.25;     // /4
+    else if (botDifficulty === "normal") factor = 0.5; // /2
+    else factor = 1; // hard
   }
+
+  // Abrunden (wie besprochen) – getrennt je Komponente
+  const winCoins = Math.floor(baseWin * factor);
+  const survivorCoins = Math.floor(baseSurvivors * factor);
+  const total = winCoins + survivorCoins;
+
+  const diffLabel = (botDifficulty === "easy") ? "Easy" : (botDifficulty === "hard") ? "Hard" : "Normal";
+  const modeLabel = (opponent === "bot") ? `gegen Bot (${diffLabel})` : "lokal";
+
+  const breakdown =
+`Coins-Übersicht (${modeLabel})
+Sieg: ${baseWin} × ${factor} = ${winCoins}
+Gerettete Einheiten: ${survivors} × 5 = ${baseSurvivors} × ${factor} = ${survivorCoins}
+Total: ${total}`;
+
+  return { total, winCoins, survivorCoins, factor, breakdown };
+}
+
+
+  function openModal({title, text, yesText="OK", noText=null}){
+  return new Promise((resolve) => {
+    game.modalOpen = true;
+    modalTitle.textContent = title;
+    modalText.textContent = text;
+
+    // Buttons setzen
+    modalYesBtn.textContent = yesText;
+
+    // NO-Button optional ausblenden
+    if (noText === null){
+      modalNoBtn.style.display = "none";
+    } else {
+      modalNoBtn.style.display = "";
+      modalNoBtn.textContent = noText;
+    }
+
+    modal.classList.add("isVisible");
+
+    const cleanup = () => {
+      modal.classList.remove("isVisible");
+      game.modalOpen = false;
+      modalYesBtn.onclick = null;
+      modalNoBtn.onclick = null;
+      applyHUD();
+    };
+
+    // Bei “nur OK” soll resolve(true) zurückgeben
+    modalYesBtn.onclick = () => { cleanup(); resolve(true); };
+    modalNoBtn.onclick  = () => { cleanup(); resolve(false); };
+  });
+}
+
 
   function setLocked(isLocked){
     game.locked = isLocked;
@@ -1307,7 +1809,7 @@ b.innerHTML =
   function phaseName(p){
     if (p === "move") return "Bewegen";
     if (p === "ability") return "Fähigkeit";
-    return "Schießen";
+    return "Schiessen";
   }
 
   function applyHUD(){
@@ -1319,6 +1821,8 @@ b.innerHTML =
 
     skipPhaseBtn.disabled = inMenu || game.locked || game.modalOpen;
     endTurnBtn.disabled = inMenu || game.locked || game.modalOpen || game.phase !== "shoot";
+if (skipPhaseBtn2) skipPhaseBtn2.disabled = skipPhaseBtn.disabled;
+if (endTurnBtn2) endTurnBtn2.disabled = endTurnBtn.disabled;
 
     if (inMenu) return;
 
@@ -1334,6 +1838,8 @@ b.innerHTML =
     } else {
       setHint("Shoot: Angreifer wählen → Gegner anklicken (oder leeres Feld für Blindschuss). Reichweite wird hell angezeigt.");
     }
+    updateCoinUI();
+
   }
 
   function hexPoints(r){
@@ -1875,6 +2381,53 @@ return false;
 
   }
 
+function isExplicitlyRevealedForPlayer(player, row, col){
+  const k = keyOf(row,col);
+  return game.reveals.some(r =>
+    r.owner === player &&
+    game.round <= r.expiresAtRound &&
+    keyOf(r.row,r.col) === k
+  );
+}
+
+function isEnemyUnitVisibleTo(enemyUnit, viewerPlayer, viewerVisibleSet){
+  // Eigene Units sind immer sichtbar
+  if (enemyUnit.owner === viewerPlayer) return true;
+
+  // Feld muss in viewer-Sicht sichtbar sein
+  if (!viewerVisibleSet.has(keyOf(enemyUnit.row, enemyUnit.col))) return false;
+
+  // Unsichtbar-Status (Spotting nur in Nahdistanz)
+  if (enemyUnit.statuses.invisible && enemyUnit.statuses.invisibleExpiresAtRound >= game.round){
+    const spot = Math.max(1, enemyUnit.statuses.invisibleSpotRange | 0);
+    for (const u of game.units){
+      if (u.owner !== viewerPlayer) continue;
+      const d = hexDistance(u.row, u.col, enemyUnit.row, enemyUnit.col);
+      if (d <= spot) return true;
+    }
+    return false;
+  }
+
+  // Wald-Spotting
+  const t = game.terrainAt.get(keyOf(enemyUnit.row, enemyUnit.col)) ?? TERRAIN.LAND;
+  if (t !== TERRAIN.FOREST) return true;
+
+  // Explizit aufgedeckt (Scout/Waldlaeufer Reveal)
+  if (isExplicitlyRevealedForPlayer(viewerPlayer, enemyUnit.row, enemyUnit.col)){
+    return true;
+  }
+
+  // Sonst Spotrange-Regel
+  const SPOT_RANGE = 2;
+  for (const u of game.units){
+    if (u.owner !== viewerPlayer) continue;
+    const d = hexDistance(u.row, u.col, enemyUnit.row, enemyUnit.col);
+    if (d <= SPOT_RANGE) return true;
+  }
+  return false;
+}
+
+
   function clearMovePlanning(){
     game.reachableCost = new Map();
     game.reachablePrev = new Map();
@@ -2256,11 +2809,22 @@ if (!allowFog && !isHexVisible(row,col)){
   }
 
   function hitChance(attacker, dist){
-    const base = UNIT_DEFS[attacker.type].hitBase ?? 0.6;
-    const penalty = Math.max(0, (dist - 1)) * 0.07;
-    const bonus = (attacker.statuses.hitBonusExpiresAtRound >= game.round) ? (attacker.statuses.hitBonus || 0) : 0;
-    return Math.max(0.12, Math.min(0.92, base - penalty + bonus));
-  }
+  const base = UNIT_DEFS[attacker.type].hitBase ?? 0.62;
+
+  // Weniger hart: 5% pro Feld ab Distanz 2 (statt 7%)
+  const penalty = Math.max(0, dist - 1) * 0.05;
+
+  // Nahkampf/kurz: kleiner Bonus, damit “nahe = verlässlicher”
+  const closeBonus = (dist <= 2) ? 0.06 : 0;
+
+  const bonus = (attacker.statuses.hitBonusExpiresAtRound >= game.round)
+    ? (attacker.statuses.hitBonus || 0)
+    : 0;
+
+  // Mindestchance hochsetzen (damit nicht “gefühlt immer daneben”)
+  return Math.max(0.20, Math.min(0.95, base - penalty + bonus + closeBonus));
+}
+
 
   function isHeavyTarget(target, hpMaxThreshold){
     return (target.hpMax | 0) >= (hpMaxThreshold | 0);
@@ -2370,6 +2934,9 @@ if (!allowFog && !isHexVisible(row,col)){
       game.units = game.units.filter(u => u.id !== target.id);
       if (game.selectedUnitId === target.id) game.selectedUnitId = null;
     }
+
+    checkGameOver();
+
   }
 
 function tryShootAtHex(attacker, row, col){
@@ -2386,7 +2953,7 @@ function tryShootAtHex(attacker, row, col){
   const rEff = effRange(attacker);
 
   if (dist > rEff){
-    toast(`${attacker.name}: Ziel außer Reichweite.`, "bad");
+    toast(`${attacker.name}: Ziel ausser Reichweite.`, "bad");
     return;
   }
 
@@ -2412,7 +2979,8 @@ function tryShootAtHex(attacker, row, col){
   const hit = (Math.random() <= chance);
 
   if (!hit){
-    toast(`${attacker.name}: Fehlschuss.`, "warn");
+    toast(`${attacker.name}: Fehlschuss.`, "warn", 1600);
+
     return;
   }
 
@@ -2443,39 +3011,478 @@ function tryShootAtHex(attacker, row, col){
     render();
   }
 
-  function endTurn(){
-    clearAbilityMode();
-    clearMovePlanning();
-    game.selectedUnitId = null;
+  let botBusy = false;
 
-    const nextPlayer = (game.activePlayer === 1) ? 2 : 1;
-    showPrivacyForNextPlayer(nextPlayer);
-    applyHUD();
+function runBotTurnIfNeeded(){
+  if (app.screen !== "game") return;
+  if (!isBotPlayer(game.activePlayer)) return;
+  if (botBusy) return;
+  if (game.locked || game.modalOpen) return;
+
+  botBusy = true;
+
+  // Overlay einschalten
+  showBotTurnOverlay();
+
+  setTimeout(async () => {
+    try{
+      await botPlayFullTurn();
+    } finally {
+      botBusy = false;
+
+      // Overlay ausschalten (sofern Bot nicht erneut direkt dran wäre)
+      hideBotTurnOverlay();
+    }
+  }, 450);
+}
+
+
+async function botPlayFullTurn(){
+  // Sicherheit: Bot spielt nur, wenn er wirklich dran ist
+  if (!isBotPlayer(game.activePlayer)) return;
+
+  // Phase 1: Move
+  if (game.phase === "move"){
+    await botPhaseMove();
+    nextPhase(); // -> ability
   }
+
+  // Phase 2: Ability
+  if (game.phase === "ability"){
+    await botPhaseAbility();
+    nextPhase(); // -> shoot
+  }
+
+  // Phase 3: Shoot
+  if (game.phase === "shoot"){
+    await botPhaseShoot();
+    // Zug beenden (nutzt deine EndTurn-Logik, die bei P1 wieder lockt)
+    endTurn();
+  }
+}
+async function botPhaseAbility(){
+  const myUnits = game.units.filter(u => u.owner === game.activePlayer && !u.state.ability);
+  if (!myUnits.length){ await delay(250); return; }
+
+  // Easy: Bot nutzt fast nie Abilities
+  if (app.botDifficulty === "easy"){
+    await delay(250);
+    return;
+  }
+
+  // Normal/Hard: einfache, “sinnvolle” Abilities
+  const enemiesVisible = game.units.some(u => u.owner !== game.activePlayer && isEnemyUnitVisibleToActive(u));
+
+  for (const u of myUnits){
+    const def = UNIT_DEFS[u.type];
+    const a = def?.ability;
+    if (!a) continue;
+
+    // Heal wenn verletzt
+    if (a.kind === "self_heal" && u.hp < u.hpMax){
+      botUseAbilityImmediate(u, a);
+      render();
+      await delay(350);
+      continue;
+    }
+
+    // Angriff buff, wenn Gegner sichtbar (damit es “logisch” wirkt)
+    if (a.kind === "self_buff_atk" && enemiesVisible){
+      botUseAbilityImmediate(u, a);
+      render();
+      await delay(350);
+      continue;
+    }
+
+    // Reveal, wenn keine Gegner sichtbar
+    if ((a.kind === "target_reveal_single" || a.kind === "target_reveal_area") && !enemiesVisible){
+      botUseAbilityTarget(u, a);
+      render();
+      await delay(350);
+      continue;
+    }
+
+    // Hard: AoE wenn mehrere Gegner in Cluster sichtbar sind
+    if (app.botDifficulty === "hard" && a.kind === "target_aoe_damage" && enemiesVisible){
+      const did = botUseAbilityAOEIfGood(u, a);
+      if (did){
+        render();
+        await delay(380);
+      }
+    }
+  }
+}
+
+function botUseAbilityImmediate(unit, ability){
+  const def = UNIT_DEFS[unit.type];
+  unit.pendingMovePenalty += (def.movePenaltyNext | 0);
+  applyAbilityImmediate(unit, ability.kind, ability.params ?? {});
+  unit.state.ability = true;
+}
+
+function botUseAbilityTarget(unit, ability){
+  const def = UNIT_DEFS[unit.type];
+  unit.pendingMovePenalty += (def.movePenaltyNext | 0);
+  unit.state.ability = true;
+
+  // Zielwahl: Mitte der gegnerischen Hälfte bzw. random sichtbares Feld
+  let candidates = game.centers
+    .filter(c => isHexVisible(c.row,c.col))
+    .map(c => ({row:c.row,col:c.col}));
+
+  if (!candidates.length) candidates = [{row: 8, col: 4}];
+
+  // eher in Richtung Gegner (Spieler 1 oben): Bot ist unten -> zielt nach oben
+  candidates.sort((a,b) => a.row - b.row);
+
+  const pick = candidates[Math.floor(candidates.length * 0.25)] || candidates[0];
+  // Direkt “commit” wie bei Click
+  // (Wir rufen deine bestehende Logik nach, indem wir Ability-State kurz setzen)
+  game.abilityMode = "target";
+  game.abilitySourceUnitId = unit.id;
+  game.abilityKind = ability.kind;
+  game.abilityPayload = ability.params ?? {};
+  commitTargetAbility(pick.row, pick.col);
+}
+
+function botUseAbilityAOEIfGood(unit, ability){
+  // sucht ein Feld, das >=2 Gegner in Radius 1 erwischt
+  const enemy = game.units.filter(u => u.owner !== game.activePlayer && isEnemyUnitVisibleToActive(u));
+  if (!enemy.length) return false;
+
+  let best = null;
+  let bestHits = 0;
+
+  for (const c of game.centers){
+    if (!isHexVisible(c.row,c.col)) continue;
+    const tiles = [{row:c.row,col:c.col}, ...neighbors(c.row,c.col)];
+    let hits = 0;
+    for (const t of tiles){
+      const u = unitAt(t.row,t.col);
+      if (u && u.owner !== game.activePlayer) hits++;
+    }
+    if (hits > bestHits){
+      bestHits = hits;
+      best = {row:c.row,col:c.col};
+    }
+  }
+
+  if (bestHits < 2) return false;
+
+  const def = UNIT_DEFS[unit.type];
+  unit.pendingMovePenalty += (def.movePenaltyNext | 0);
+  unit.state.ability = true;
+
+  game.abilityMode = "target";
+  game.abilitySourceUnitId = unit.id;
+  game.abilityKind = ability.kind;
+  game.abilityPayload = ability.params ?? {};
+  commitTargetAbility(best.row, best.col);
+
+  return true;
+}
+
+async function botPhaseShoot(){
+  const my = game.units.filter(u => u.owner === game.activePlayer);
+  const enemies = game.units.filter(u => u.owner !== game.activePlayer && isEnemyUnitVisibleToActive(u));
+  if (!my.length){ await delay(250); return; }
+
+  // Easy: manchmal blind / suboptimal
+  const sloppy = (app.botDifficulty === "easy");
+
+  // Bot versucht, mit mehreren Units zu schiessen
+  for (const attacker of my){
+    const shotsAllowed = shotsAllowedFor(attacker);
+    if (attacker.state.shotsUsed >= shotsAllowed) continue;
+
+    const best = botPickBestShot(attacker, enemies, sloppy);
+    if (!best) continue;
+
+    game.selectedUnitId = attacker.id;
+    tryShootAtHex(attacker, best.row, best.col);
+    render();
+    await delay(420);
+  }
+
+  game.selectedUnitId = null;
+}
+
+function botPickBestShot(attacker, enemies, sloppy){
+  const rEff = effRange(attacker);
+
+  let best = null;
+  let bestScore = -Infinity;
+
+  for (const e of enemies){
+    const dist = hexDistance(attacker.row, attacker.col, e.row, e.col);
+    if (dist > rEff) continue;
+
+    const chance = hitChance(attacker, dist);
+    const dmg = computeShotDamage(attacker, e, dist);
+
+    // Erwartungswert + Killbonus
+    const expected = chance * dmg;
+    const killBonus = (dmg >= e.hp) ? 3.5 : 0;
+    const prioGlass = (e.hpMax <= 3) ? 0.8 : 0;
+
+    let score = expected + killBonus + prioGlass;
+
+    // Hard: stärker kill-fokussiert
+    if (app.botDifficulty === "hard" && dmg >= e.hp) score += 1.8;
+
+    // Easy: Zufall & weniger optimal
+    if (sloppy) score += (Math.random() * 1.1 - 0.55);
+
+    if (score > bestScore){
+      bestScore = score;
+      best = { row: e.row, col: e.col };
+    }
+  }
+
+  // Easy: wenn kein sichtbares Ziel, manchmal Blindschuss nahe “oben”
+  if (!best && sloppy){
+    // wählt ein sichtbares Feld in Richtung Gegnerhälfte
+    const vis = game.centers.filter(c => isHexVisible(c.row,c.col));
+    vis.sort((a,b) => a.row - b.row);
+    const pick = vis[0];
+    if (pick) return {row: pick.row, col: pick.col};
+  }
+
+  return best;
+}
+
+
+async function botPhaseMove(){
+  // Easy: manchmal einfach skippen oder nur 1 Move
+  const doOnlyOneMove = (app.botDifficulty === "easy");
+
+  const myUnits = game.units.filter(u => u.owner === game.activePlayer && u.moveLeft > 0);
+  if (!myUnits.length) { await delay(250); return; }
+
+  // sichtbare Gegner (aus Bot-Sicht)
+  const enemyUnits = game.units.filter(u => u.owner !== game.activePlayer && isEnemyUnitVisibleToActive(u));
+
+  // Zielpunkt: nächster sichtbarer Gegner, sonst "nach vorne" (Richtung Spieler 1: nach oben)
+  const fallbackTarget = { row: 2, col: 2 };
+
+  let movesDone = 0;
+
+  // Einfaches “menschliches” Muster: nacheinander beste Moves ausführen
+  while (true){
+    const pick = botPickBestMove(myUnits, enemyUnits, fallbackTarget);
+    if (!pick) break;
+
+    game.selectedUnitId = pick.unit.id;
+    computeReachableForUnit(pick.unit);
+
+    // executeMoveTo nutzt reachableCost, daher vorher computeReachableForUnit
+    executeMoveTo(pick.to.row, pick.to.col);
+    render();
+    await delay(380);
+
+    movesDone++;
+    if (doOnlyOneMove && movesDone >= 1) break;
+
+    // Units neu filtern (moveLeft hat sich geändert)
+    for (let i=myUnits.length-1; i>=0; i--){
+      const uu = game.units.find(x => x.id === myUnits[i].id);
+      if (!uu || uu.moveLeft <= 0) myUnits.splice(i,1);
+      else myUnits[i] = uu;
+    }
+    if (!myUnits.length) break;
+  }
+
+  game.selectedUnitId = null;
+}
+
+function botPickBestMove(myUnits, enemyUnits, fallbackTarget){
+  let best = null;
+  let bestScore = -Infinity;
+
+  for (const u of myUnits){
+    // erreichbare Felder berechnen (berücksichtigt Fog + Block + Terrain)
+    game.selectedUnitId = u.id;
+    computeReachableForUnit(u);
+
+    for (const [k, cost] of game.reachableCost.entries()){
+      const {row, col} = parseKey(k);
+
+      // Basis: näher an Gegner oder fallback
+      const target = enemyUnits.length
+        ? botNearestEnemyPos(row, col, enemyUnits)
+        : fallbackTarget;
+
+      const d = hexDistance(row, col, target.row, target.col);
+
+      // “Menschlich”: Wald als Deckung für fragile Units
+      const t = terrainAtRC(row, col);
+      const inFor = (t === TERRAIN.FOREST);
+      const fragile = (u.hpMax <= 3);
+
+      let score = 0;
+      score += (enemyUnits.length ? (20 - d) : (10 - d));
+      score -= 0.6 * cost;
+
+      if (inFor && fragile) score += 2.5;
+      if (inFor && !fragile) score += 0.7;
+
+      // nicht in Wasser stehen bleiben, wenn nicht nötig
+      if (t === TERRAIN.WATER) score -= 1.4;
+
+      // Easy: bisschen Zufall, damit er nicht “zu clean” ist
+      if (app.botDifficulty === "easy") score += (Math.random() * 1.2 - 0.6);
+
+      if (score > bestScore){
+        bestScore = score;
+        best = { unit: u, to: {row, col} };
+      }
+    }
+  }
+
+  clearMovePlanning();
+  return best;
+}
+
+function botNearestEnemyPos(row, col, enemies){
+  let best = enemies[0];
+  let bestD = Infinity;
+  for (const e of enemies){
+    const d = hexDistance(row, col, e.row, e.col);
+    if (d < bestD){ bestD = d; best = e; }
+  }
+  return {row: best.row, col: best.col};
+}
+
+function checkGameOver(){
+  if (app.screen !== "game") return false;
+
+  const p1Alive = game.units.some(u => u.owner === 1);
+  const p2Alive = game.units.some(u => u.owner === 2);
+
+  if (p1Alive && p2Alive) return false;
+
+  const winner = p1Alive ? 1 : 2;
+
+  const p2Name = (app.opponent === "bot") ? "Bot" : "Spieler 2";
+  const winnerName = (winner === 1) ? "Spieler 1" : p2Name;
+
+  // Coins nur, wenn Spieler 1 gewinnt (dein Profil)
+  const survivors = game.units.filter(u => u.owner === 1).length;
+
+  let coinsText = "";
+  let reward = null;
+
+  if (winner === 1){
+    reward = calcCoinRewardForWin({
+      survivors,
+      opponent: app.opponent,
+      botDifficulty: app.botDifficulty
+    });
+    coinsText = `\n\n${reward.breakdown}`;
+  } else {
+    coinsText = `\n\nCoins: 0 (nur Spieler 1 erhält Coins im Profil).`;
+  }
+
+  // NUR 1 OK-Button
+  openModal({
+    title: "Spiel beendet",
+    text: `${winnerName} hat gewonnen.${coinsText}\n\nZurück zum Startmenü.`,
+    yesText: "OK",
+    noText: null
+  }).then(() => {
+
+    // Coins gutschreiben (nach OK)
+    if (reward && reward.total > 0){
+      addCoins(reward.total);
+      toast(`+${reward.total} Coins erhalten.`, "ok", 1800);
+    }
+
+    // Zurück zum Menü
+    showStartScreen();
+
+    // UI-State resetten
+    app.screen = "menu";
+    game.locked = false;
+    privacy.classList.remove("isVisible");
+    board.classList.remove("isLocked");
+    applyHUD();
+    renderUnitOverview();
+  });
+
+  return true;
+}
+
+
+
+function delay(ms){ return new Promise(r => setTimeout(r, ms)); }
+
+
+  function endTurn(){
+  clearAbilityMode();
+  clearMovePlanning();
+  game.selectedUnitId = null;
+
+  const nextPlayer = (game.activePlayer === 1) ? 2 : 1;
+
+  // === Bot-Modus: NIE Übergabe-Screen. Immer direkt wechseln. ===
+  if (app.opponent === "bot"){
+    setLocked(false);  // sicherstellen, dass nichts blockiert
+    readyNext();       // wechselt activePlayer + round + resets + render
+    return;
+  }
+
+  // === Lokal (2 Spieler): wie gehabt Übergabe ===
+  showPrivacyForNextPlayer(nextPlayer);
+  applyHUD();
+}
+
+
+
+  function isBotPlayer(player){
+  return (app.opponent === "bot" && player === 2); // Bot ist Spieler 2
+}
+
 
   function readyNext(){
-    clearAbilityMode();
-    clearMovePlanning();
+  clearAbilityMode();
+  clearMovePlanning();
 
-    game.activePlayer = (game.activePlayer === 1) ? 2 : 1;
-    if (game.activePlayer === 1) game.round += 1;
-    game.turnIndex += 1;
+  // Spieler wechseln
+  game.activePlayer = (game.activePlayer === 1) ? 2 : 1;
 
+  // Neue Runde erst wenn wieder Spieler 1 dran ist
+  if (game.activePlayer === 1) game.round += 1;
 
-    game.phase = "move";
-    game.selectedUnitId = null;
+  // Turnindex hochzählen (für Hinweise)
+  game.turnIndex += 1;
 
-    pruneExpiredReveals();
-    pruneExpiredClues();
+  // Turn-Start housekeeping
+  game.phase = "move";
+  game.selectedUnitId = null;
 
-    applyStartOfTurnEffects(game.activePlayer);
-    resetTurnStateForPlayer(game.activePlayer);
+  pruneExpiredReveals();
+  pruneExpiredClues();
 
-    setLocked(false);
+  applyStartOfTurnEffects(game.activePlayer);
+  resetTurnStateForPlayer(game.activePlayer);
+
+  // UI entsperren (für Mensch) – Bot-Overlay wird separat gesteuert
+  setLocked(false);
+
+  // Hinweis
+  if (isBotPlayer(game.activePlayer)){
+    toast(`Bot: Runde ${game.round} (Move)`, "warn", 1200);
+  } else {
     toast(`Spieler ${game.activePlayer}: Runde ${game.round} (Move)`, "warn", 1400);
-    applyHUD();
-    render();
   }
+
+  applyHUD();
+  render();
+
+  // Wenn Bot jetzt dran ist: automatisch spielen
+  runBotTurnIfNeeded();
+}
+
 
   function buildOverlaySetForSelected(){
   const selected = game.units.find(u => u.id === game.selectedUnitId);
@@ -2490,7 +3497,7 @@ function tryShootAtHex(attacker, row, col){
     const vEff = effVision(selected);
     const rEff = effRange(selected);
 
-    // Sicht (weiß) immer anzeigen
+    // Sicht (weiss) immer anzeigen
     for (const c of game.centers){
       const k = keyOf(c.row,c.col);
       if (!game.visible.has(k)) continue;
@@ -2558,98 +3565,127 @@ function tryShootAtHex(attacker, row, col){
     return "?";
   }
 
-  function renderUnitOverview(){
-    unitOverviewSub.textContent = (app.screen === "game")
-      ? `Aktueller Spieler: ${game.activePlayer} · Phase: ${phaseName(game.phase)} · Modus: ${app.mode} · Map: ${app.map?.id ?? "-"}`
-      : (app.screen === "builder")
-        ? `Team Builder: Spieler ${app.builderPlayer} · Modus: ${app.mode} · Offline`
-        : `Menü: Modus wählen · Offline`;
+function uiViewerPlayer(){
+  // Wenn gegen Bot gespielt wird: UI bleibt immer aus Sicht von Spieler 1 (Mensch)
+  if (app.opponent === "bot") return 1;
+  // Lokal: aktueller aktiver Spieler schaut
+  return game.activePlayer;
+}
 
-    const p1 = game.units.filter(u => u.owner === 1);
-    const p2All = game.units.filter(u => u.owner === 2);
+function renderUnitOverview(){
+  p1List.innerHTML = "";
+  p2List.innerHTML = "";
 
-    const p2 = (app.screen === "game" && game.activePlayer === 1)
-      ? p2All.filter(u => isEnemyUnitVisibleToActive(u))
-      : p2All;
+  // POV: gegen Bot bleibt UI aus Sicht von Spieler 1 (Mensch)
+  const pov = (app.opponent === "bot") ? 1 : game.activePlayer;
 
-    const p1Shown = (app.screen === "game" && game.activePlayer === 2)
-      ? p1.filter(u => isEnemyUnitVisibleToActive(u))
-      : p1;
+  // Sichtbarkeit aus POV berechnen
+  const povVisible = computeVisibleFor(pov);
 
-    p1Count.textContent = `${p1Shown.length}/${p1.length}`;
-    p2Count.textContent = `${p2.length}/${p2All.length}`;
+  // Units sortieren: erst Spieler 1 dann Spieler 2, innerhalb nach Name
+  const unitsSorted = game.units.slice().sort((a,b) => {
+    if (a.owner !== b.owner) return a.owner - b.owner;
+    return (a.name||"").localeCompare((b.name||""), "de");
+  });
 
-    p1List.innerHTML = "";
-    p2List.innerHTML = "";
+  for (const u of unitsSorted){
+    const isVisible =
+      (u.owner === pov) ||
+      isEnemyUnitVisibleTo(u, pov, povVisible);
 
-    const makeCard = (u) => {
-      const div = document.createElement("div");
-      div.className = "unitCard";
+    if (!isVisible) continue;
 
-      const left = document.createElement("div");
-      left.className = "unitLeft";
+    const card = document.createElement("div");
+    card.className = "unitCard";
 
-      const t = document.createElement("div");
-      t.className = "unitType";
-      t.textContent = `${u.name} — ${u.role}`;
+    card.innerHTML = `
+      <div class="unitLeft">
+        <div class="unitType">${u.name}</div>
+        <div class="unitMeta">
+          ${u.role} · R:${u.row} C:${u.col} · MP:${u.moveLeft}/${u.moveMax}
+        </div>
+      </div>
+      <div class="unitHp">
+        <div class="hpLabel">HP</div>
+        <div class="hpVal">${u.hp}/${u.hpMax}</div>
+      </div>
+    `;
 
-      const meta = document.createElement("div");
-      meta.className = "unitMeta";
-      const abilityInfo = abilityInlineForCard(u.type);
-meta.textContent = `${unitPosText(u)}\n${abilityTextForUI(u.type)}`;
-meta.style.whiteSpace = "pre-wrap";
-
-
-
-      left.appendChild(t);
-      left.appendChild(meta);
-
-      const right = document.createElement("div");
-      right.className = "unitHp";
-
-      const hpL = document.createElement("div");
-      hpL.className = "hpLabel";
-      hpL.textContent = "HP";
-
-      const hpV = document.createElement("div");
-      hpV.className = "hpVal";
-      hpV.textContent = `${u.hp}`;
-
-      right.appendChild(hpL);
-      right.appendChild(hpV);
-
-      div.appendChild(left);
-      div.appendChild(right);
-
-      div.style.cursor = "pointer";
-      div.addEventListener("click", async () => {
-        if (app.screen !== "game") return;
-
-        if (u.owner !== game.activePlayer) {
-          toast("Nur eigene Einheiten auswählen.", "bad");
-          return;
-        }
-
-        game.selectedUnitId = u.id;
-
-        if (game.phase === "ability"){
-          await tryUseAbility(u);
-        }
-
-        render();
-      });
-
-      return div;
-    };
-
-    for (const u of p1Shown) p1List.appendChild(makeCard(u));
-    for (const u of p2) p2List.appendChild(makeCard(u));
+    if (u.owner === 1) p1List.appendChild(card);
+    else p2List.appendChild(card);
   }
+
+  p1Count.textContent = String(game.units.filter(u => u.owner === 1).length);
+  p2Count.textContent = String(game.units.filter(u => u.owner === 2).length);
+
+  unitOverviewSub.textContent =
+    (app.opponent === "bot")
+      ? `Aktueller Spieler: ${game.activePlayer} (Spieler 2 = Bot)`
+      : `Aktueller Spieler: ${game.activePlayer}`;
+}
+
+function showBotTurnOverlay(){
+  // weisser Screen (privacy) als Bot-Screen verwenden
+  privacyTitle.textContent = "Bot ist am Zug…";
+  privacy.classList.add("isVisible");
+  board.classList.add("isLocked");
+
+  // Ready-Button ausblenden
+  readyBtn.style.display = "none";
+}
+
+function hideBotTurnOverlay(){
+  privacy.classList.remove("isVisible");
+  board.classList.remove("isLocked");
+  readyBtn.style.display = "";
+}
+
+
 
   // INPUT
   function onTileClick(row,col){
-    if (app.screen !== "game") return;
-    if (game.locked || game.modalOpen) return;
+  if (app.screen !== "game") return;
+  if (game.locked || game.modalOpen) return;
+
+  // Wenn eine Unit auf dem Hex steht, soll ein Klick aufs Hex diese Unit auswählen/benutzen
+  const u = unitAt(row, col);
+  if (u){
+    // Ability-Targeting hat Priorität (sonst würdest du nie zielen können)
+    if (!(game.phase === "ability" && game.abilityMode === "target")){
+      // In Shoot: eigenes Feld = Angreifer wählen, gegnerisches Feld = Schuss (wenn Angreifer gewählt)
+      if (game.phase === "shoot"){
+        if (u.owner === game.activePlayer){
+          onUnitClick(u);
+          return;
+        } else {
+          const attacker = game.units.find(x => x.id === game.selectedUnitId);
+          if (attacker && attacker.owner === game.activePlayer){
+            tryShootAtHex(attacker, row, col);
+            render();
+            return;
+          }
+          // Noch kein Angreifer -> nichts verschiessen, nur Hinweis
+          toast("Schiessen: zuerst eigenen Angreifer wählen.", "warn", 1400);
+          return;
+        }
+      }
+
+      // In Move/Ability: eigene Einheit per Hex-Klick anwählen
+      if (u.owner === game.activePlayer){
+        onUnitClick(u);
+        return;
+      }
+    }
+  }
+
+  // Ability Targeting (Ziel setzen) bleibt unverändert
+  if (game.phase === "ability" && game.abilityMode === "target"){
+    commitTargetAbility(row, col);
+    return;
+  }
+
+  // ... ab hier bleibt dein bestehender Code (move/shoot auf leere Felder) gleich ...
+
 
     if (game.phase === "ability" && game.abilityMode === "target"){
       commitTargetAbility(row, col);
@@ -2669,7 +3705,7 @@ meta.style.whiteSpace = "pre-wrap";
     if (game.phase === "shoot"){
       const attacker = game.units.find(u => u.id === game.selectedUnitId);
       if (!attacker || attacker.owner !== game.activePlayer){
-        toast("Schießen: zuerst Angreifer wählen.", "bad");
+        toast("Schiessen: zuerst Angreifer wählen.", "bad");
         return;
       }
       tryShootAtHex(attacker, row, col);
@@ -2693,7 +3729,7 @@ meta.style.whiteSpace = "pre-wrap";
       }
 
       if (!attacker || attacker.owner !== game.activePlayer){
-        toast("Schießen: zuerst Angreifer wählen.", "bad");
+        toast("Schiessen: zuerst Angreifer wählen.", "bad");
         return;
       }
 
@@ -2732,6 +3768,9 @@ meta.style.whiteSpace = "pre-wrap";
     game.visible = computeVisibleFor(game.activePlayer);
 
     clearSvg();
+      const shop = loadShop();
+  const symbolScale = shop.bigSymbols ? 2.0 : 1.0;
+
 
     const worldW = game.world.w;
     const worldH = game.world.h;
@@ -2886,27 +3925,31 @@ if (iExact || iFuzzy){
       ug.style.cursor = (!game.locked) ? "pointer" : "default";
 
       const dot = document.createElementNS("http://www.w3.org/2000/svg","circle");
-      dot.setAttribute("class", `unitDot ${u.owner === 1 ? "unit--p1":"unit--p2"}`);
-      dot.setAttribute("cx","0");
-      dot.setAttribute("cy","0");
-      dot.setAttribute("r", (game.world.r * 0.22).toFixed(2));
-      ug.appendChild(dot);
+dot.setAttribute("class", `unitDot ${u.owner === 1 ? "unit--p1":"unit--p2"}`);
+dot.setAttribute("cx","0");
+dot.setAttribute("cy","0");
+dot.setAttribute("r", (game.world.r * 0.22 * symbolScale).toFixed(2));
+ug.appendChild(dot);
 
-      if (game.selectedUnitId === u.id){
-        const ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
-        ring.setAttribute("class","selectedRing");
-        ring.setAttribute("cx","0");
-        ring.setAttribute("cy","0");
-        ring.setAttribute("r", (game.world.r * 0.27).toFixed(2));
-        ug.appendChild(ring);
-      }
+if (game.selectedUnitId === u.id){
+  const ring = document.createElementNS("http://www.w3.org/2000/svg","circle");
+  ring.setAttribute("class","selectedRing");
+  ring.setAttribute("cx","0");
+  ring.setAttribute("cy","0");
+  ring.setAttribute("r", (game.world.r * 0.27 * symbolScale).toFixed(2));
+  ug.appendChild(ring);
+}
 
-      const label = document.createElementNS("http://www.w3.org/2000/svg","text");
-      label.setAttribute("class","unitLabel");
-      label.setAttribute("x","0");
-      label.setAttribute("y","4");
-      label.textContent = unitShortLetter(u);
-      ug.appendChild(label);
+const label = document.createElementNS("http://www.w3.org/2000/svg","text");
+label.setAttribute("class","unitLabel");
+label.setAttribute("x","0");
+// y proportional skalieren, sonst sitzt der Text zu weit unten
+label.setAttribute("y", (4 * symbolScale).toFixed(2));
+// Schriftgrösse explizit setzen, damit sie wirklich mitwächst
+label.setAttribute("font-size", (12 * symbolScale).toFixed(2));
+label.textContent = unitShortLetter(u);
+ug.appendChild(label);
+
 
       ug.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -3008,6 +4051,29 @@ if (iExact || iFuzzy){
     if (game.locked || game.modalOpen) return;
     nextPhase();
   });
+
+btnRules.addEventListener("click", async () => {
+  await openModal({
+    title: "Regeln (Kurzfassung)",
+    text: RULES_TEXT,
+    yesText: "Schliessen",
+    noText: "Schliessen"
+  });
+});
+
+// Shop Events
+shopBtn.addEventListener("click", () => {
+  // Shop nur im Menü sinnvoll (du kannst es später auch im Spiel erlauben)
+  openShop();
+});
+
+btnShopClose.addEventListener("click", () => {
+  closeShop();
+});
+
+shopScreen.addEventListener("click", (e) => {
+  if (e.target === shopScreen) closeShop();
+});
 
   endTurnBtn.addEventListener("click", () => {
     if (app.screen !== "game") return;
